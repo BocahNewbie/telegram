@@ -1,5 +1,5 @@
 let daftarPeserta = []; 
-let totalPemenangCount = 0;
+let riwayatPemenang = [];
 let isAcakBerjalan = false;
 let shuffleInterval = null;
 
@@ -20,6 +20,26 @@ const emojiBadge = document.getElementById('emojiBadge');
 const winnerModal = document.getElementById('winnerModal');
 const modalWinnerName = document.getElementById('modalWinnerName');
 
+// Load data dari localStorage saat halaman dibuka
+function loadFromStorage() {
+    const savedPeserta = localStorage.getItem('nonfood_peserta');
+    const savedRiwayat = localStorage.getItem('nonfood_riwayat');
+    
+    if (savedPeserta) {
+        daftarPeserta = JSON.parse(savedPeserta);
+    }
+    if (savedRiwayat) {
+        riwayatPemenang = JSON.parse(savedRiwayat);
+    }
+    renderSemua();
+}
+
+// Simpan data ke localStorage perangkat pengguna
+function saveToStorage() {
+    localStorage.setItem('nonfood_peserta', JSON.stringify(daftarPeserta));
+    localStorage.setItem('nonfood_riwayat', JSON.stringify(riwayatPemenang));
+}
+
 // 1. Tambah Peserta Satuan
 function tambahPeserta() {
     const nama = inputNamaSatuan.value.trim();
@@ -37,6 +57,7 @@ function tambahPeserta() {
     inputNamaSatuan.value = '';
     inputNamaSatuan.focus();
 
+    saveToStorage();
     renderSemua();
 }
 
@@ -44,6 +65,7 @@ function tambahPeserta() {
 function renderSemua() {
     const pesertaAktif = daftarPeserta.filter(p => !p.sudahMenang).length;
     statTotal.innerText = pesertaAktif;
+    statPemenang.innerText = riwayatPemenang.length;
     logCountText.innerText = `${pesertaAktif} Aktif`;
 
     // A. Render Kotak Daftar Peserta
@@ -78,12 +100,34 @@ function renderSemua() {
             logContainer.appendChild(item);
         });
     }
+
+    // B. Render Kotak Riwayat Pemenang
+    if (riwayatPemenang.length === 0) {
+        riwayatContainer.innerHTML = `
+            <div id="emptyRiwayatState" class="text-center py-12 text-slate-500">
+                <i class="fa-solid fa-trophy text-2xl mb-1.5 block opacity-40"></i>
+                Belum ada pemenang.
+            </div>
+        `;
+    } else {
+        riwayatContainer.innerHTML = '';
+        riwayatPemenang.forEach((itemRiwayat, idx) => {
+            const winItem = document.createElement('div');
+            winItem.className = 'flex items-center justify-between p-2 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 font-semibold';
+            winItem.innerHTML = `
+                <span class="flex items-center gap-2"><i class="fa-solid fa-award text-amber-400"></i> ${idx + 1}. ${itemRiwayat.nama}</span>
+                <span class="text-[10px] text-slate-400">${itemRiwayat.waktu}</span>
+            `;
+            riwayatContainer.appendChild(winItem);
+        });
+    }
 }
 
 // Hapus peserta satuan dari daftar
 function hapusPeserta(index) {
     if (isAcakBerjalan) return;
     daftarPeserta.splice(index, 1);
+    saveToStorage();
     renderSemua();
 }
 
@@ -92,7 +136,7 @@ function mulaiAcak() {
     const pesertaTersedia = daftarPeserta.filter(p => !p.sudahMenang);
     
     if (pesertaTersedia.length === 0) {
-        alert('Semua peserta sudah menang! Silakan klik tombol "Reset" di kotak Riwayat jika ingin mengundi ulang.');
+        alert('Semua peserta sudah menang! Silakan klik tombol "Reset Pemenang" jika ingin mengundi ulang.');
         return;
     }
 
@@ -135,31 +179,19 @@ function hentiAcak() {
             daftarPeserta[realIndex].sudahMenang = true;
         }
 
-        totalPemenangCount++;
-        statPemenang.innerText = totalPemenangCount;
+        const waktuMenang = new Date().toLocaleTimeString('id-ID');
+        riwayatPemenang.push({ nama: pemenangObj.nama, waktu: waktuMenang });
 
         emojiBadge.innerText = "🎉🏆✨";
         statusText.innerText = pemenangObj.nama;
         statusText.className = "text-xl sm:text-2xl font-extrabold text-emerald-400 scale-105 transition-transform";
         statusDesc.innerText = `Selamat kepada ${pemenangObj.nama}! Berhasil terpilih.`;
 
+        saveToStorage();
         renderSemua();
 
         // MUNCULKAN POPUP MODAL MODERN
         bukaModalPopup(pemenangObj.nama);
-
-        // Tambahkan ke Kotak Riwayat Pemenang (Menggunakan appendChild agar berurutan dari pertama ke terakhir)
-        if (totalPemenangCount === 1) {
-            riwayatContainer.innerHTML = '';
-        }
-
-        const winItem = document.createElement('div');
-        winItem.className = 'flex items-center justify-between p-2 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 font-semibold';
-        winItem.innerHTML = `
-            <span class="flex items-center gap-2"><i class="fa-solid fa-award text-amber-400"></i> ${totalPemenangCount}. ${pemenangObj.nama}</span>
-            <span class="text-[10px] text-slate-400">${new Date().toLocaleTimeString('id-ID')}</span>
-        `;
-        riwayatContainer.appendChild(winItem); // Urutan dari menang pertama ke bawah
 
         isAcakBerjalan = false;
         btnStart.disabled = false;
@@ -180,49 +212,26 @@ function tutupModal() {
     setTimeout(() => winnerModal.classList.add('hidden'), 300);
 }
 
-// Reset Pemenang Saja (Buka blokir peserta)
+// Reset Pemenang Saja (Buka blokir peserta dan bersihkan riwayat)
 function resetPemenangSaja() {
     if (isAcakBerjalan) return;
     if (daftarPeserta.length === 0) return;
 
     daftarPeserta.forEach(p => p.sudahMenang = false);
-    totalPemenangCount = 0;
-    statPemenang.innerText = 0;
+    riwayatPemenang = [];
+    
     statusText.innerText = "Belum Diundi";
     statusText.className = "text-xl sm:text-2xl font-extrabold text-amber-400";
     emojiBadge.innerText = "🎯";
     statusDesc.innerText = "Semua blokir dibuka. Nama siap diundi ulang!";
     
-    riwayatContainer.innerHTML = `
-        <div id="emptyRiwayatState" class="text-center py-12 text-slate-500">
-            <i class="fa-solid fa-trophy text-2xl mb-1.5 block opacity-40"></i>
-            Belum ada pemenang.
-        </div>
-    `;
+    saveToStorage();
     renderSemua();
 }
 
-// Reset Semua
-function clearLogs() {
-    if (isAcakBerjalan) return;
-    daftarPeserta = [];
-    totalPemenangCount = 0;
-    statPemenang.innerText = 0;
-    statusText.innerText = "Belum Diundi";
-    statusText.className = "text-xl sm:text-2xl font-extrabold text-amber-400";
-    emojiBadge.innerText = "🎯";
-    statusDesc.innerText = "Tekan Start lalu Stop untuk memilih.";
-    
-    riwayatContainer.innerHTML = `
-        <div id="emptyRiwayatState" class="text-center py-12 text-slate-500">
-            <i class="fa-solid fa-trophy text-2xl mb-1.5 block opacity-40"></i>
-            Belum ada pemenang.
-        </div>
-    `;
-    renderSemua();
-}
-
+// Saat halaman dimuat, ambil data tersimpan dari browser
 window.onload = function() {
+    loadFromStorage();
     if (inputNamaSatuan) {
         inputNamaSatuan.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
