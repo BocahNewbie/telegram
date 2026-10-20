@@ -13,7 +13,7 @@
     background: rgba(51, 65, 85, 1);
 }
 
-/* Efek Animasi Neon Kelap-Kelip (Biru Dongker, Ungu Dop, Hijau Neon) */
+/* Efek Animasi Neon Kelap-Kelip Nonstop (Biru Dongker, Ungu Dop, Hijau Neon) */
 @keyframes neonGlow {
     0% {
         color: #1e3a8a; /* Biru Dongker */
@@ -34,7 +34,7 @@
 }
 
 .neon-title {
-    animation: neonGlow 4s infinite ease-in-out;
+    animation: neonGlow 3s infinite ease-in-out;
 }
 
 /* Modal animation classes */
