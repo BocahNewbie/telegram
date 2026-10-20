@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Undian Digital Interaktif</title>
+    <title>Sistem Acak Nama</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Font: Inter -->
@@ -24,7 +24,7 @@
         }
     </script>
 </head>
-<body class="h-full font-sans antialiased bg-slate-900 text-slate-100 flex flex-col justify-between selection:bg-amber-500 selection:text-white">
+<body class="h-full font-sans antialiased bg-slate-900 text-slate-100 flex flex-col justify-between selection:bg-amber-500 selection:text-white relative">
 
     <!-- Container Utama -->
     <div class="min-h-full flex flex-col justify-between p-4 sm:p-6 md:p-8 max-w-5xl mx-auto w-full">
@@ -33,9 +33,9 @@
         <header class="mb-6 sm:mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-5">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">
-                    Undian Digital Interaktif
+                    Acak Nama Peserta
                 </h1>
-                <p class="text-xs sm:text-sm text-slate-400 mt-1">Tambah peserta, klik Start, dan Stop untuk memilih pemenang dengan animasi Header</p>
+                <p class="text-xs sm:text-sm text-slate-400 mt-1">Simple untuk acak nama</p>
             </div>
             <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/60 text-xs text-slate-300">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
@@ -59,7 +59,7 @@
                     </div>
                 </div>
 
-                <!-- Status Kartu Pemenang Utama (Animasi Header) -->
+                <!-- Status Kartu Pemenang Utama (Header Animasi) -->
                 <div id="statusCard" class="relative overflow-hidden rounded-xl border p-5 transition-all duration-300 bg-slate-900/60 border-slate-700 shadow-inner">
                     <div class="flex items-center gap-4">
                         <div id="statusIconBg" class="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
@@ -109,10 +109,16 @@
                             <i class="fa-solid fa-users text-amber-400 text-sm"></i>
                             <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Daftar Peserta & Riwayat</h2>
                         </div>
-                        <button onclick="clearLogs()" class="text-xs text-slate-400 hover:text-rose-400 transition-colors flex items-center gap-1 bg-slate-900/50 px-2.5 py-1 rounded-md border border-slate-700/50">
-                            <i class="fa-solid fa-trash-can text-[10px]"></i>
-                            <span>Reset Semua</span>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="resetPemenangSaja()" class="text-xs text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1 bg-slate-900/50 px-2.5 py-1 rounded-md border border-slate-700/50" title="Buka blokir peserta yang sudah menang">
+                                <i class="fa-solid fa-rotate-right text-[10px]"></i>
+                                <span>Reset Pemenang</span>
+                            </button>
+                            <button onclick="clearLogs()" class="text-xs text-slate-400 hover:text-rose-400 transition-colors flex items-center gap-1 bg-slate-900/50 px-2.5 py-1 rounded-md border border-slate-700/50">
+                                <i class="fa-solid fa-trash-can text-[10px]"></i>
+                                <span>Reset Semua</span>
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- Container List Peserta -->
@@ -125,7 +131,7 @@
                 </div>
 
                 <div class="pt-3 border-t border-slate-700/40 text-[11px] text-slate-500 flex justify-between items-center">
-                    <span>Nama pemenang dapat dipakai ulang</span>
+                    <span>Peserta menang otomatis terblokir</span>
                     <span id="logCountText">0 Peserta</span>
                 </div>
             </section>
@@ -133,11 +139,26 @@
 
         <!-- Footer -->
         <footer class="mt-8 pt-4 border-t border-slate-800/60 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
-            <div>&copy; 2026 Sistem Undian Digital Modern.</div>
+            <div>&copy; 2026 Bocah Newbie</div>
             <div class="flex items-center gap-4">
-                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-circle text-[8px] text-emerald-500"></i> Header Animation Ready</span>
+                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-circle text-[8px] text-emerald-500"></i> Popup Mode Active</span>
             </div>
         </footer>
+    </div>
+
+    <!-- POPUP MODAL PEMENANG -->
+    <div id="winnerModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-slate-900 border border-amber-500/50 rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl text-center transform scale-90 transition-transform duration-300" id="modalContent">
+            <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-3xl shadow-lg">
+                <i class="fa-solid fa-award"></i>
+            </div>
+            <span class="text-xs font-semibold tracking-widest text-amber-400 uppercase bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">Selamat Pemenang! 🎉</span>
+            <h2 id="modalWinnerName" class="text-3xl font-extrabold text-white mt-4 mb-2 tracking-wide">Nama Pemenang</h2>
+            <p class="text-xs text-slate-400 mb-6">Peserta ini telah terpilih dan otomatis diblokir dari undian berikutnya.</p>
+            <button onclick="tutupModal()" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-amber-950/40 transition-all">
+                Tutup & Lanjutkan
+            </button>
+        </div>
     </div>
 
     <!-- JavaScript Eksternal -->
