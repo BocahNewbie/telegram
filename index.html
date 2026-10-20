@@ -27,7 +27,7 @@
 <body class="h-full font-sans antialiased bg-slate-900 text-slate-100 flex flex-col justify-between selection:bg-amber-500 selection:text-white relative">
 
     <!-- Container Utama -->
-    <div class="min-h-full flex flex-col justify-between p-4 sm:p-6 md:p-8 max-w-5xl mx-auto w-full">
+    <div class="min-h-full flex flex-col justify-between p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full">
         
         <!-- Header -->
         <header class="mb-6 sm:mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-5">
@@ -46,10 +46,10 @@
         <!-- Main Content Grid -->
         <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 my-auto">
             
-            <!-- Panel Kontrol & Input Peserta Satuan (Lg: 6 cols) -->
-            <section class="lg:col-span-6 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between gap-5">
+            <!-- Panel Kontrol & Input Peserta (Lg: 5 cols) -->
+            <section class="lg:col-span-5 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between gap-5">
                 <div>
-                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">1. Tambah Nama Peserta (Satuan)</h2>
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">1. Tambah Nama Peserta</h2>
                     <div class="flex gap-2">
                         <input type="text" id="inputNamaSatuan" class="flex-1 bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition-colors" placeholder="Ketik nama peserta...">
                         <button onclick="tambahPeserta()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-md">
@@ -67,11 +67,11 @@
                         </div>
                         <div class="overflow-hidden">
                             <div class="text-[10px] font-medium text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                <span>Pemenang Terpilih</span>
+                                <span>Anda Terpilih</span>
                                 <span id="emojiBadge" class="text-sm">🎉🏆✨</span>
                             </div>
                             <div id="statusText" class="text-xl sm:text-2xl font-extrabold text-emerald-400 truncate transition-all">Belum Diundi</div>
-                            <p id="statusDesc" class="text-xs text-slate-400 mt-0.5">Tekan Start lalu Stop untuk menguji keberuntungan.</p>
+                            <p id="statusDesc" class="text-xs text-slate-400 mt-0.5">Tekan Start lalu Stop untuk memilih.</p>
                         </div>
                     </div>
                 </div>
@@ -84,7 +84,7 @@
                     </button>
                     <button id="btnStop" onclick="hentiAcak()" disabled class="flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:scale-[0.98] shadow-lg shadow-rose-950/30 border border-rose-500/30 transition-all opacity-50 cursor-not-allowed">
                         <i class="fa-solid fa-stop text-xs"></i>
-                        <span>STOP (4s)</span>
+                        <span>STOP</span>
                     </button>
                 </div>
 
@@ -101,52 +101,63 @@
                 </div>
             </section>
 
-            <!-- Panel Daftar Peserta & Riwayat (Lg: 6 cols) -->
-            <section class="lg:col-span-6 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col h-[420px] lg:h-auto justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-3">
+            <!-- Panel Kanan: Daftar Peserta & Riwayat Terpisah (Lg: 7 cols) -->
+            <section class="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <!-- Kotak 1: Daftar Peserta -->
+                <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col h-[380px]">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-700/40 pb-2">
                         <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-users text-amber-400 text-sm"></i>
-                            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Daftar Peserta & Riwayat</h2>
+                            <i class="fa-solid fa-users text-indigo-400 text-xs"></i>
+                            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Daftar Peserta</h2>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button onclick="resetPemenangSaja()" class="text-xs text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1 bg-slate-900/50 px-2.5 py-1 rounded-md border border-slate-700/50" title="Buka blokir peserta yang sudah menang">
-                                <i class="fa-solid fa-rotate-right text-[10px]"></i>
-                                <span>Reset Pemenang</span>
-                            </button>
-                            <button onclick="clearLogs()" class="text-xs text-slate-400 hover:text-rose-400 transition-colors flex items-center gap-1 bg-slate-900/50 px-2.5 py-1 rounded-md border border-slate-700/50">
-                                <i class="fa-solid fa-trash-can text-[10px]"></i>
-                                <span>Reset Semua</span>
-                            </button>
-                        </div>
+                        <span id="logCountText" class="text-[10px] text-slate-400 bg-slate-900/60 px-2 py-0.5 rounded border border-slate-800">0 Aktif</span>
                     </div>
-                    
-                    <!-- Container List Peserta -->
-                    <div id="logContainer" class="space-y-2 overflow-y-auto max-h-[320px] pr-1.5 text-xs">
-                        <div id="emptyLogState" class="text-center py-16 text-slate-500">
-                            <i class="fa-solid fa-users text-3xl mb-2 block opacity-40"></i>
-                            Belum ada peserta. Masukkan nama dan klik Tambah!
+                    <div id="logContainer" class="space-y-2 overflow-y-auto flex-1 pr-1 text-xs">
+                        <div id="emptyLogState" class="text-center py-12 text-slate-500">
+                            <i class="fa-solid fa-user-plus text-2xl mb-1.5 block opacity-40"></i>
+                            Belum ada peserta.
                         </div>
                     </div>
                 </div>
 
-                <div class="pt-3 border-t border-slate-700/40 text-[11px] text-slate-500 flex justify-between items-center">
-                    <span>Peserta menang otomatis terblokir</span>
-                    <span id="logCountText">0 Peserta</span>
+                <!-- Kotak 2: Riwayat Pemenang -->
+                <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col h-[380px]">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-700/40 pb-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-award text-amber-400 text-xs"></i>
+                            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Riwayat Pemenang</h2>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="resetPemenangSaja()" class="text-[10px] text-amber-400 hover:text-amber-300 transition-colors bg-slate-900/50 px-2 py-0.5 rounded border border-slate-700/50" title="Buka blokir peserta">
+                                <i class="fa-solid fa-rotate-right"></i> Reset
+                            </button>
+                            <button onclick="clearLogs()" class="text-[10px] text-slate-400 hover:text-rose-400 transition-colors bg-slate-900/50 px-2 py-0.5 rounded border border-slate-700/50" title="Hapus semua">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="riwayatContainer" class="space-y-2 overflow-y-auto flex-1 pr-1 text-xs">
+                        <div id="emptyRiwayatState" class="text-center py-12 text-slate-500">
+                            <i class="fa-solid fa-trophy text-2xl mb-1.5 block opacity-40"></i>
+                            Belum ada pemenang.
+                        </div>
+                    </div>
                 </div>
+
             </section>
         </main>
 
         <!-- Footer -->
         <footer class="mt-8 pt-4 border-t border-slate-800/60 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
-            <div>&copy; 2026 Bocah Newbie.</div>
+            <div>&copy; 2026 Non Food by Bocah Newbie.</div>
             <div class="flex items-center gap-4">
-                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-circle text-[8px] text-emerald-500"></i> Popup Modern Active</span>
+                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-circle text-[8px] text-emerald-500"></i> Split Layout Active</span>
             </div>
         </footer>
     </div>
 
-    <!-- POPUP MODAL PEMENANG (MODERN & INTERAKTIF) -->
+    <!-- POPUP MODAL PEMENANG -->
     <div id="winnerModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
         <div class="bg-slate-900 border border-amber-500/50 rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl text-center transform scale-90 transition-transform duration-300" id="modalContent">
             <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-3xl shadow-lg animate-bounce">
