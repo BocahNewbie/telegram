@@ -150,7 +150,7 @@ function mulaiAcak() {
     btnStop.classList.remove('opacity-50', 'cursor-not-allowed');
 
     emojiBadge.innerText = "🎲";
-    statusDesc.innerText = "Mengacak nama di header... Klik STOP untuk memilih!";
+    statusDesc.innerText = "Mengacak nama... Klik STOP untuk memilih!";
 
     shuffleInterval = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * pesertaTersedia.length);
@@ -165,7 +165,7 @@ function hentiAcak() {
 
     btnStop.disabled = true;
     btnStop.classList.add('opacity-50', 'cursor-not-allowed');
-    statusDesc.innerText = "Menentukan pemenang utama (4 detik)...";
+    statusDesc.innerText = "Menentukan orang terpilih...";
 
     setTimeout(() => {
         clearInterval(shuffleInterval);
