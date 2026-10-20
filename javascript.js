@@ -1,133 +1,172 @@
+let daftarPeserta = [];
 let totalPemenangCount = 0;
-let isUndianBerjalan = false;
+let isAcakBerjalan = false;
+let shuffleInterval = null;
+let stopTimer = null;
 
 // Elemen DOM
-const inputPeserta = document.getElementById('inputPeserta');
+const inputNamaSatuan = document.getElementById('inputNamaSatuan');
 const logContainer = document.getElementById('logContainer');
 const emptyLogState = document.getElementById('emptyLogState');
 const logCountText = document.getElementById('logCountText');
 const statTotal = document.getElementById('statTotal');
 const statPemenang = document.getElementById('statPemenang');
 const btnStart = document.getElementById('btnStart');
+const btnStop = document.getElementById('btnStop');
 const statusText = document.getElementById('statusText');
 const statusDesc = document.getElementById('statusDesc');
 
-// Hitung jumlah peserta awal
-function updateStatistikPeserta() {
-    const list = getDaftarPeserta();
-    statTotal.innerText = list.length;
-}
-
-function getDaftarPeserta() {
-    const text = inputPeserta.value.trim();
-    if (!text) return [];
-    return text.split(/[\n,]+/).map(item => item.trim()).filter(item => item.length > 0);
-}
-
-// Fungsi Utama Mulai Undian dengan Animasi Acak & Terscroll ke Bawah
-function mulaiUndian() {
-    if (isUndianBerjalan) return;
-    
-    const peserta = getDaftarPeserta();
-    if (peserta.length === 0) {
-        alert('Masukkan minimal 1 nama peserta terlebih dahulu!');
+// 1. Tambah Peserta Satuan dan otomatis masuk ke animasi panel pinggir
+function tambahPeserta() {
+    const nama = inputNamaSatuan.value.trim();
+    if (!nama) {
+        alert('Mohon ketik nama peserta terlebih dahulu!');
         return;
     }
 
-    isUndianBerjalan = true;
+    daftarPeserta.push(nama);
+    inputNamaSatuan.value = '';
+    inputNamaSatuan.focus();
+
+    updateTampilanPesertaBaru();
+}
+
+// Render daftar peserta ke panel pinggir
+function updateTampilanPesertaBaru() {
+    statTotal.innerText = daftarPeserta.length;
+
+    if (emptyLogState && daftarPeserta.length > 0) {
+        emptyLogState.style.display = 'none';
+    }
+
+    // Buat elemen item peserta di panel pinggir
+    const item = document.createElement('div');
+    item.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-300 animate-fadeIn';
+    item.innerHTML = `
+        <span class="flex items-center gap-2"><i class="fa-solid fa-user text-indigo-400 text-[10px]"></i> ${daftarPeserta[daftarPeserta.length - 1]}</span>
+        <span class="text-[10px] text-slate-500">Terdaftar</span>
+    `;
+    logContainer.appendChild(item);
+    logContainer.scrollTop = logContainer.scrollHeight;
+    updateLogCountText();
+}
+
+// 2. Klik START untuk mulai mengacak nama dengan animasi scroll
+function mulaiAcak() {
+    if (daftarPeserta.length === 0) {
+        alert('Daftar peserta masih kosong! Tambahkan peserta terlebih dahulu.');
+        return;
+    }
+
+    if (isAcakBerjalan) return;
+
+    isAcakBerjalan = true;
     btnStart.disabled = true;
     btnStart.classList.add('opacity-50', 'cursor-not-allowed');
-
-    if (emptyLogState) emptyLogState.style.display = 'none';
+    
+    btnStop.disabled = false;
+    btnStop.classList.remove('opacity-50', 'cursor-not-allowed');
 
     statusText.innerText = "Mengacak Nama...";
-    statusDesc.innerText = "Sedang memilih peserta secara acak...";
+    statusDesc.innerText = "Sistem sedang berjalan, silakan klik STOP untuk berhenti.";
 
-    // Buat elemen log khusus untuk animasi putar nama
-    const animItem = document.createElement('div');
-    animItem.className = 'flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold animate-pulse';
-    animItem.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid fa-spinner animate-spin"></i> <span id="slotName">Menentukan...</span></span> <span class="text-[10px] opacity-70">Undian...</span>`;
-    logContainer.insertBefore(animItem, logContainer.firstChild);
+    // Efek putar nama acak dengan kecepatan tinggi (Slot Machine + Auto-scroll)
+    shuffleInterval = setInterval(() => {
+        const randomIndex = Math.floor(Math.random() * daftarPeserta.length);
+        const namaAcak = daftarPeserta[randomIndex];
 
-    let counter = 0;
-    const slotText = document.getElementById('slotName');
-    
-    // Efek putar nama secara cepat (Slot Machine Effect)
-    const interval = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * peserta.length);
-        slotText.innerText = peserta[randomIndex];
-        counter++;
-
-        // Auto-scroll ke bawah agar animasi terlihat bergerak
+        statusText.innerText = namaAcak;
+        
+        // Buat efek elemen berjalan di panel pinggir
+        const rollingItem = document.createElement('div');
+        rollingItem.className = 'flex items-center justify-between p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] animate-pulse';
+        rollingItem.innerHTML = `<span><i class="fa-solid fa-spinner animate-spin text-[9px]"></i> Memilih: ${namaAcak}</span>`;
+        
+        logContainer.appendChild(rollingItem);
         logContainer.scrollTop = logContainer.scrollHeight;
 
-        // Setelah berputar sekitar 25 kali (~2.5 detik), pilih pemenang tetap
-        if (counter > 25) {
-            clearInterval(interval);
-            
-            // Pilih pemenang final secara acak
-            const finalWinnerIndex = Math.floor(Math.random() * peserta.length);
-            const winnerName = peserta[finalWinnerIndex];
-
-            totalPemenangCount++;
-            statPemenang.innerText = totalPemenangCount;
-
-            // Ubah tampilan card status jadi pemenang
-            statusText.innerText = winnerName;
-            statusDesc.innerText = "Selamat! Pemenang berhasil diundi.";
-
-            // Ubah elemen animasi jadi kartu pemenang tetap
-            animItem.className = 'flex items-center justify-between p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 transform transition-all duration-500';
-            animItem.innerHTML = `
-                <div class="flex items-center gap-2.5">
-                    <span class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400"><i class="fa-solid fa-award"></i></span>
-                    <div>
-                        <div class="font-bold text-sm text-emerald-200">${winnerName}</div>
-                        <div class="text-[10px] text-emerald-400/80">Pemenang ke-${totalPemenangCount}</div>
-                    </div>
-                </div>
-                <span class="text-[10px] text-slate-400">${new Date().toLocaleTimeString('id-ID')}</span>
-            `;
-
-            // Efek scroll mulus ke bawah memperlihatkan hasil akhir
-            logContainer.scrollTop = logContainer.scrollHeight;
-
-            isUndianBerjalan = false;
-            btnStart.disabled = false;
-            btnStart.classList.remove('opacity-50', 'cursor-not-allowed');
-            updateLogCount();
+        // Batasi jumlah baris riwayat agar tidak terlalu penuh
+        if (logContainer.children.length > 30) {
+            logContainer.removeChild(logContainer.firstChild);
         }
-    }, 90);
+    }, 80);
 }
 
-// Reset Undian
-function resetUndian() {
-    if (isUndianBerjalan) return;
-    statusText.innerText = "Belum Diundi";
-    statusDesc.innerText = "Tekan tombol Start untuk mengacak.";
-    totalPemenangCount = 0;
-    statPemenang.innerText = 0;
+// 3. Klik STOP untuk berhenti secara bertahap selama 4 detik sampai ke pemenang
+function hentiAcak() {
+    if (!isAcakBerjalan) return;
+
+    btnStop.disabled = true;
+    btnStop.classList.add('opacity-50', 'cursor-not-allowed');
+    statusDesc.innerText = "Menuju penentuan pemenang (Proses 4 detik)...";
+
+    // Perlambat perputaran secara bertahap selama 4 detik
+    setTimeout(() => {
+        clearInterval(shuffleInterval);
+
+        // Pilih pemenang final secara acak murni
+        const finalIndex = Math.floor(Math.random() * daftarPeserta.length);
+        const pemenang = daftarPeserta[finalIndex];
+
+        totalPemenangCount++;
+        statPemenang.innerText = totalPemenangCount;
+
+        // Tampilkan hasil pemenang di kartu utama
+        statusText.innerText = pemenang;
+        statusDesc.innerText = `Selamat! ${pemenang} terpilih sebagai pemenang.`;
+
+        // Tambahkan kartu pemenang permanen ke panel pinggir dengan efek gulir otomatis
+        const winItem = document.createElement('div');
+        winItem.className = 'flex items-center justify-between p-3 rounded-xl bg-emerald-950/50 border border-emerald-500/40 text-emerald-300 font-bold shadow-lg';
+        winItem.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400"><i class="fa-solid fa-award"></i></span>
+                <div>
+                    <div class="text-sm text-emerald-200">${pemenang}</div>
+                    <div class="text-[10px] text-emerald-400/80">Pemenang #${totalPemenangCount}</div>
+                </div>
+            </div>
+            <span class="text-[10px] text-slate-400">${new Date().toLocaleTimeString('id-ID')}</span>
+        `;
+        logContainer.appendChild(winItem);
+        logContainer.scrollTop = logContainer.scrollHeight;
+
+        // Reset status tombol
+        isAcakBerjalan = false;
+        btnStart.disabled = false;
+        btnStart.classList.remove('opacity-50', 'cursor-not-allowed');
+
+    }, 4000); // Durasi berhenti perlahan selama 4 detik
 }
 
-// Bersihkan Log
+// Bersihkan daftar
 function clearLogs() {
-    if (isUndianBerjalan) return;
+    if (isAcakBerjalan) return;
+    daftarPeserta = [];
+    statTotal.innerText = 0;
+    statusText.innerText = "Belum Diundi";
+    statusDesc.innerText = "Tekan Start lalu Stop untuk menguji keberuntungan.";
     logContainer.innerHTML = `
         <div id="emptyLogState" class="text-center py-16 text-slate-500">
-            <i class="fa-solid fa-ticket text-3xl mb-2 block opacity-40"></i>
-            Daftar peserta siap diundi. Klik Start!
+            <i class="fa-solid fa-users text-3xl mb-2 block opacity-40"></i>
+            Belum ada peserta. Masukkan nama dan klik Tambah!
         </div>
     `;
-    updateLogCount();
+    updateLogCountText();
 }
 
-function updateLogCount() {
-    const items = logContainer.querySelectorAll('.flex.items-center.justify-between');
-    logCountText.innerText = `${items.length} Riwayat`;
+function updateLogCountText() {
+    const count = daftarPeserta.length;
+    logCountText.innerText = `${count} Peserta`;
 }
 
-// Inisialisasi saat halaman dibuka
+// Tekan Enter untuk shortcut tombol Tambah
 window.onload = function() {
-    updateStatistikPeserta();
-    inputPeserta.addEventListener('input', updateStatistikPeserta);
+    if (inputNamaSatuan) {
+        inputNamaSatuan.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                tambahPeserta();
+            }
+        });
+    }
 };
