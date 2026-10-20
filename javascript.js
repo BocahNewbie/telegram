@@ -1,4 +1,4 @@
-let daftarPeserta = []; // Berisi objek: { nama: "...", sudahMenang: false }
+let daftarPeserta = []; 
 let totalPemenangCount = 0;
 let isAcakBerjalan = false;
 let shuffleInterval = null;
@@ -26,7 +26,6 @@ function tambahPeserta() {
         return;
     }
 
-    // Cek duplikasi nama
     if (daftarPeserta.some(p => p.nama.toLowerCase() === nama.toLowerCase())) {
         alert('Nama peserta sudah ada di daftar!');
         return;
@@ -39,7 +38,7 @@ function tambahPeserta() {
     renderDaftarPeserta();
 }
 
-// Render daftar peserta ke panel kanan (dengan status blokir jika sudah menang)
+// Render daftar peserta ke panel kanan
 function renderDaftarPeserta() {
     const pesertaAktif = daftarPeserta.filter(p => !p.sudahMenang).length;
     statTotal.innerText = pesertaAktif;
@@ -60,7 +59,6 @@ function renderDaftarPeserta() {
         const item = document.createElement('div');
         
         if (peserta.sudahMenang) {
-            // Tampilan jika peserta sudah menang (Di-blok / Disabled)
             item.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-900/30 border border-slate-800/50 text-slate-500 opacity-60';
             item.innerHTML = `
                 <span class="flex items-center gap-2 line-through"><i class="fa-solid fa-user-slash text-rose-500/50 text-[10px]"></i> ${peserta.nama}</span>
@@ -70,7 +68,6 @@ function renderDaftarPeserta() {
                 </div>
             `;
         } else {
-            // Tampilan peserta aktif
             item.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-300';
             item.innerHTML = `
                 <span class="flex items-center gap-2"><i class="fa-solid fa-user text-indigo-400 text-[10px]"></i> ${peserta.nama}</span>
@@ -90,12 +87,12 @@ function hapusPeserta(index) {
     renderDaftarPeserta();
 }
 
-// 2. Klik START: Animasi berputar di header dari peserta yang BELUM menang
+// 2. Klik START
 function mulaiAcak() {
     const pesertaTersedia = daftarPeserta.filter(p => !p.sudahMenang);
     
     if (pesertaTersedia.length === 0) {
-        alert('Semua peserta sudah menang! Silakan klik "Reset Pemenang" jika ingin mengundi ulang nama yang ada tanpa menambah baru.');
+        alert('Semua peserta sudah menang! Silakan klik "Reset Pemenang" jika ingin mengundi ulang.');
         return;
     }
 
@@ -111,7 +108,6 @@ function mulaiAcak() {
     emojiBadge.innerText = "🎲";
     statusDesc.innerText = "Mengacak nama di header... Klik STOP untuk memilih!";
 
-    // Efek putar nama acak di header
     shuffleInterval = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * pesertaTersedia.length);
         statusText.innerText = pesertaTersedia[randomIndex].nama;
@@ -119,7 +115,7 @@ function mulaiAcak() {
     }, 70);
 }
 
-// 3. Klik STOP: Berhenti selama 4 detik, tentukan pemenang, blokir namanya, dan tampilkan POPUP
+// 3. Klik STOP
 function hentiAcak() {
     if (!isAcakBerjalan) return;
 
@@ -130,12 +126,10 @@ function hentiAcak() {
     setTimeout(() => {
         clearInterval(shuffleInterval);
 
-        // Ambil hanya peserta yang belum menang
         const pesertaTersedia = daftarPeserta.filter(p => !p.sudahMenang);
         const finalIndex = Math.floor(Math.random() * pesertaTersedia.length);
         const pemenangObj = pesertaTersedia[finalIndex];
 
-        // Tandai peserta ini sudah menang (agar otomatis terblokir)
         const realIndex = daftarPeserta.findIndex(p => p.nama === pemenangObj.nama);
         if (realIndex !== -1) {
             daftarPeserta[realIndex].sudahMenang = true;
@@ -144,19 +138,25 @@ function hentiAcak() {
         totalPemenangCount++;
         statPemenang.innerText = totalPemenangCount;
 
-        // Tampilkan hasil di header
         emojiBadge.innerText = "🎉🏆✨";
         statusText.innerText = pemenangObj.nama;
         statusText.className = "text-xl sm:text-2xl font-extrabold text-emerald-400 scale-105 transition-transform";
         statusDesc.innerText = `Selamat kepada ${pemenangObj.nama}! Berhasil terpilih.`;
 
-        // Render ulang daftar peserta (muncullah efek blokir di list kanan)
         renderDaftarPeserta();
 
-        // TAMPILKAN POPUP MODAL PEMENANG
+        // MUNCULKAN POPUP MODAL MODERN & INTERAKTIF
         bukaModalPopup(pemenangObj.nama);
 
-        // Reset tombol kontrol
+        // Riwayat
+        const winItem = document.createElement('div');
+        winItem.className = 'flex items-center justify-between p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 font-semibold mb-2';
+        winItem.innerHTML = `
+            <span class="flex items-center gap-2"><i class="fa-solid fa-award text-amber-400"></i> Pemenang: ${pemenangObj.nama}</span>
+            <span class="text-[10px] text-slate-400">${new Date().toLocaleTimeString('id-ID')}</span>
+        `;
+        logContainer.prepend(winItem);
+
         isAcakBerjalan = false;
         btnStart.disabled = false;
         btnStart.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -176,7 +176,7 @@ function tutupModal() {
     setTimeout(() => winnerModal.classList.add('hidden'), 300);
 }
 
-// Tombol Khusus: Reset Pemenang Saja (Membuka blokir nama agar bisa dipakai lagi tanpa menambah nama baru)
+// Reset Pemenang Saja
 function resetPemenangSaja() {
     if (isAcakBerjalan) return;
     if (daftarPeserta.length === 0) return;
@@ -191,7 +191,7 @@ function resetPemenangSaja() {
     renderDaftarPeserta();
 }
 
-// Reset Semua (Hapus total)
+// Reset Semua
 function clearLogs() {
     if (isAcakBerjalan) return;
     daftarPeserta = [];
@@ -204,7 +204,6 @@ function clearLogs() {
     renderDaftarPeserta();
 }
 
-// Shortcut Enter untuk input nama
 window.onload = function() {
     if (inputNamaSatuan) {
         inputNamaSatuan.addEventListener('keypress', function(e) {
