@@ -60,7 +60,6 @@ function renderSemua() {
             const item = document.createElement('div');
             
             if (peserta.sudahMenang) {
-                // Tampilan Terblokir (Keren & Tercoret)
                 item.className = 'flex items-center justify-between p-2 rounded-xl bg-slate-900/30 border border-slate-800/50 text-slate-500 opacity-60';
                 item.innerHTML = `
                     <span class="flex items-center gap-2 line-through"><i class="fa-solid fa-user-slash text-rose-500/50 text-[10px]"></i> ${peserta.nama}</span>
@@ -70,7 +69,6 @@ function renderSemua() {
                     </div>
                 `;
             } else {
-                // Tampilan Peserta Aktif
                 item.className = 'flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-300';
                 item.innerHTML = `
                     <span class="flex items-center gap-2"><i class="fa-solid fa-user text-indigo-400 text-[10px]"></i> ${peserta.nama}</span>
@@ -150,18 +148,18 @@ function hentiAcak() {
         // MUNCULKAN POPUP MODAL MODERN
         bukaModalPopup(pemenangObj.nama);
 
-        // Tambahkan ke Kotak Riwayat Pemenang
-        if (emptyRiwayatState) {
+        // Tambahkan ke Kotak Riwayat Pemenang (Menggunakan appendChild agar berurutan dari pertama ke terakhir)
+        if (totalPemenangCount === 1) {
             riwayatContainer.innerHTML = '';
         }
 
         const winItem = document.createElement('div');
         winItem.className = 'flex items-center justify-between p-2 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 font-semibold';
         winItem.innerHTML = `
-            <span class="flex items-center gap-2"><i class="fa-solid fa-award text-amber-400"></i> ${pemenangObj.nama}</span>
+            <span class="flex items-center gap-2"><i class="fa-solid fa-award text-amber-400"></i> ${totalPemenangCount}. ${pemenangObj.nama}</span>
             <span class="text-[10px] text-slate-400">${new Date().toLocaleTimeString('id-ID')}</span>
         `;
-        riwayatContainer.prepend(winItem);
+        riwayatContainer.appendChild(winItem); // Urutan dari menang pertama ke bawah
 
         isAcakBerjalan = false;
         btnStart.disabled = false;
