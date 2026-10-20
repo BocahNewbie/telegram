@@ -1,4 +1,4 @@
-let daftarPeserta = [];
+let daftarPeserta = []; // Berisi objek: { nama: "...", sudahMenang: false }
 let totalPemenangCount = 0;
 let isAcakBerjalan = false;
 let shuffleInterval = null;
@@ -15,6 +15,8 @@ const btnStop = document.getElementById('btnStop');
 const statusText = document.getElementById('statusText');
 const statusDesc = document.getElementById('statusDesc');
 const emojiBadge = document.getElementById('emojiBadge');
+const winnerModal = document.getElementById('winnerModal');
+const modalWinnerName = document.getElementById('modalWinnerName');
 
 // 1. Tambah Peserta Satuan
 function tambahPeserta() {
@@ -24,16 +26,23 @@ function tambahPeserta() {
         return;
     }
 
-    daftarPeserta.push(nama);
+    // Cek duplikasi nama
+    if (daftarPeserta.some(p => p.nama.toLowerCase() === nama.toLowerCase())) {
+        alert('Nama peserta sudah ada di daftar!');
+        return;
+    }
+
+    daftarPeserta.push({ nama: nama, sudahMenang: false });
     inputNamaSatuan.value = '';
     inputNamaSatuan.focus();
 
     renderDaftarPeserta();
 }
 
-// Render daftar peserta ke panel kanan
+// Render daftar peserta ke panel kanan (dengan status blokir jika sudah menang)
 function renderDaftarPeserta() {
-    statTotal.innerText = daftarPeserta.length;
+    const pesertaAktif = daftarPeserta.filter(p => !p.sudahMenang).length;
+    statTotal.innerText = pesertaAktif;
 
     if (daftarPeserta.length === 0) {
         logContainer.innerHTML = `
@@ -46,22 +55,32 @@ function renderDaftarPeserta() {
         return;
     }
 
-    if (emptyLogState) {
-        logContainer.innerHTML = '';
-    }
-
     logContainer.innerHTML = '';
     daftarPeserta.forEach((peserta, index) => {
         const item = document.createElement('div');
-        item.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-300';
-        item.innerHTML = `
-            <span class="flex items-center gap-2"><i class="fa-solid fa-user text-indigo-400 text-[10px]"></i> ${peserta}</span>
-            <button onclick="hapusPeserta(${index})" class="text-slate-500 hover:text-rose-400 transition-colors text-xs px-2"><i class="fa-solid fa-xmark"></i></button>
-        `;
+        
+        if (peserta.sudahMenang) {
+            // Tampilan jika peserta sudah menang (Di-blok / Disabled)
+            item.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-900/30 border border-slate-800/50 text-slate-500 opacity-60';
+            item.innerHTML = `
+                <span class="flex items-center gap-2 line-through"><i class="fa-solid fa-user-slash text-rose-500/50 text-[10px]"></i> ${peserta.nama}</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] bg-rose-500/10 text-rose-400 px-2 py-0.5 rounded border border-rose-500/20">Menang</span>
+                    <button onclick="hapusPeserta(${index})" class="text-slate-600 hover:text-rose-400 transition-colors text-xs px-2"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            `;
+        } else {
+            // Tampilan peserta aktif
+            item.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-300';
+            item.innerHTML = `
+                <span class="flex items-center gap-2"><i class="fa-solid fa-user text-indigo-400 text-[10px]"></i> ${peserta.nama}</span>
+                <button onclick="hapusPeserta(${index})" class="text-slate-500 hover:text-rose-400 transition-colors text-xs px-2"><i class="fa-solid fa-xmark"></i></button>
+            `;
+        }
         logContainer.appendChild(item);
     });
 
-    logCountText.innerText = `${daftarPeserta.length} Peserta`;
+    logCountText.innerText = `${pesertaAktif} Peserta Aktif`;
 }
 
 // Hapus peserta satuan dari daftar
@@ -71,10 +90,12 @@ function hapusPeserta(index) {
     renderDaftarPeserta();
 }
 
-// 2. Klik START: Animasi berputar di header (tanpa scroll)
+// 2. Klik START: Animasi berputar di header dari peserta yang BELUM menang
 function mulaiAcak() {
-    if (daftarPeserta.length === 0) {
-        alert('Daftar peserta masih kosong! Tambahkan peserta terlebih dahulu.');
+    const pesertaTersedia = daftarPeserta.filter(p => !p.sudahMenang);
+    
+    if (pesertaTersedia.length === 0) {
+        alert('Semua peserta sudah menang! Silakan klik "Reset Pemenang" jika ingin mengundi ulang nama yang ada tanpa menambah baru.');
         return;
     }
 
@@ -90,15 +111,15 @@ function mulaiAcak() {
     emojiBadge.innerText = "🎲";
     statusDesc.innerText = "Mengacak nama di header... Klik STOP untuk memilih!";
 
-    // Efek putar nama acak di header secara cepat
+    // Efek putar nama acak di header
     shuffleInterval = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * daftarPeserta.length);
-        statusText.innerText = daftarPeserta[randomIndex];
+        const randomIndex = Math.floor(Math.random() * pesertaTersedia.length);
+        statusText.innerText = pesertaTersedia[randomIndex].nama;
         statusText.className = "text-xl sm:text-2xl font-extrabold text-amber-400 animate-pulse";
     }, 70);
 }
 
-// 3. Klik STOP: Berhenti perlahan selama 4 detik, tampilkan pemenang dengan emoji interaktif
+// 3. Klik STOP: Berhenti selama 4 detik, tentukan pemenang, blokir namanya, dan tampilkan POPUP
 function hentiAcak() {
     if (!isAcakBerjalan) return;
 
@@ -106,41 +127,71 @@ function hentiAcak() {
     btnStop.classList.add('opacity-50', 'cursor-not-allowed');
     statusDesc.innerText = "Menentukan pemenang utama (4 detik)...";
 
-    // Perlambat perputaran selama 4 detik
     setTimeout(() => {
         clearInterval(shuffleInterval);
 
-        // Pilih pemenang final secara acak murni
-        const finalIndex = Math.floor(Math.random() * daftarPeserta.length);
-        const pemenang = daftarPeserta[finalIndex];
+        // Ambil hanya peserta yang belum menang
+        const pesertaTersedia = daftarPeserta.filter(p => !p.sudahMenang);
+        const finalIndex = Math.floor(Math.random() * pesertaTersedia.length);
+        const pemenangObj = pesertaTersedia[finalIndex];
+
+        // Tandai peserta ini sudah menang (agar otomatis terblokir)
+        const realIndex = daftarPeserta.findIndex(p => p.nama === pemenangObj.nama);
+        if (realIndex !== -1) {
+            daftarPeserta[realIndex].sudahMenang = true;
+        }
 
         totalPemenangCount++;
         statPemenang.innerText = totalPemenangCount;
 
-        // Tampilkan hasil di header dengan emoticon perayaan
+        // Tampilkan hasil di header
         emojiBadge.innerText = "🎉🏆✨";
-        statusText.innerText = pemenang;
+        statusText.innerText = pemenangObj.nama;
         statusText.className = "text-xl sm:text-2xl font-extrabold text-emerald-400 scale-105 transition-transform";
-        statusDesc.innerText = `Selamat kepada ${pemenang}! Berhasil terpilih sebagai pemenang.`;
+        statusDesc.innerText = `Selamat kepada ${pemenangObj.nama}! Berhasil terpilih.`;
 
-        // Masukkan riwayat pemenang ke daftar riwayat di bawah list peserta
-        const winItem = document.createElement('div');
-        winItem.className = 'flex items-center justify-between p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 font-semibold mt-2';
-        winItem.innerHTML = `
-            <span class="flex items-center gap-2"><i class="fa-solid fa-award text-amber-400"></i> Pemenang: ${pemenang}</span>
-            <span class="text-[10px] text-slate-400">${new Date().toLocaleTimeString('id-ID')}</span>
-        `;
-        logContainer.prepend(winItem); // Taruh di paling atas riwayat
+        // Render ulang daftar peserta (muncullah efek blokir di list kanan)
+        renderDaftarPeserta();
 
-        // Reset status tombol (Nama peserta tetap ada di list sehingga bisa diundi lagi!)
+        // TAMPILKAN POPUP MODAL PEMENANG
+        bukaModalPopup(pemenangObj.nama);
+
+        // Reset tombol kontrol
         isAcakBerjalan = false;
         btnStart.disabled = false;
         btnStart.classList.remove('opacity-50', 'cursor-not-allowed');
 
-    }, 4000); // Durasi 4 detik
+    }, 4000);
 }
 
-// Reset Semua
+// Kontrol Popup Modal
+function bukaModalPopup(namaPemenang) {
+    modalWinnerName.innerText = namaPemenang;
+    winnerModal.classList.remove('hidden');
+    setTimeout(() => winnerModal.classList.add('show'), 10);
+}
+
+function tutupModal() {
+    winnerModal.classList.remove('show');
+    setTimeout(() => winnerModal.classList.add('hidden'), 300);
+}
+
+// Tombol Khusus: Reset Pemenang Saja (Membuka blokir nama agar bisa dipakai lagi tanpa menambah nama baru)
+function resetPemenangSaja() {
+    if (isAcakBerjalan) return;
+    if (daftarPeserta.length === 0) return;
+
+    daftarPeserta.forEach(p => p.sudahMenang = false);
+    totalPemenangCount = 0;
+    statPemenang.innerText = 0;
+    statusText.innerText = "Belum Diundi";
+    statusText.className = "text-xl sm:text-2xl font-extrabold text-amber-400";
+    emojiBadge.innerText = "🎯";
+    statusDesc.innerText = "Semua blokir dibuka. Nama siap diundi ulang!";
+    renderDaftarPeserta();
+}
+
+// Reset Semua (Hapus total)
 function clearLogs() {
     if (isAcakBerjalan) return;
     daftarPeserta = [];
