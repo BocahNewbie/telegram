@@ -122,21 +122,16 @@
                     </div>
                 </div>
 
-                <!-- Kotak 2: Riwayat Pemenang (Berurutan dari Pertama hingga Terakhir) -->
+                <!-- Kotak 2: Riwayat Pemenang (Tanpa ikon tong sampah) -->
                 <div class="bg-blue-950/20 backdrop-blur-xl border border-blue-900/30 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col h-[380px]">
                     <div class="flex items-center justify-between mb-3 border-b border-blue-950 pb-2">
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-award text-emerald-400 text-xs"></i>
                             <h2 class="text-xs font-semibold uppercase tracking-wider text-purple-300">Riwayat Pemenang</h2>
                         </div>
-                        <div class="flex items-center gap-1.5">
-                            <button onclick="resetPemenangSaja()" class="text-[10px] text-purple-300 hover:text-white transition-colors bg-slate-950/80 px-2 py-0.5 rounded border border-blue-950" title="Buka blokir peserta">
-                                <i class="fa-solid fa-rotate-right"></i> Reset
-                            </button>
-                            <button onclick="clearLogs()" class="text-[10px] text-slate-400 hover:text-rose-400 transition-colors bg-slate-950/80 px-2 py-0.5 rounded border border-blue-950" title="Hapus semua">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
+                        <button onclick="resetPemenangSaja()" class="text-[10px] text-purple-300 hover:text-white transition-colors bg-slate-950/80 px-2.5 py-1 rounded border border-blue-950" title="Buka blokir peserta">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> Reset Pemenang
+                        </button>
                     </div>
                     <div id="riwayatContainer" class="space-y-2 overflow-y-auto flex-1 pr-1 text-xs">
                         <div id="emptyRiwayatState" class="text-center py-12 text-slate-500">
@@ -168,7 +163,7 @@
             <h2 id="modalWinnerName" class="text-3xl font-extrabold text-white mt-4 mb-2 tracking-wide">Nama Pemenang</h2>
             <p class="text-xs text-slate-400 mb-6">Peserta ini telah terpilih dan otomatis diblokir dari undian berikutnya.</p>
             <button onclick="tutupModal()" class="w-full py-3 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-sm rounded-xl shadow-[0_0_15px_rgba(52,211,153,0.4)] transition-all">
-                Tutup
+                Tutup & Lanjutkan
             </button>
         </div>
     </div>
