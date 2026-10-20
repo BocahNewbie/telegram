@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Kontrol & Menu Utama</title>
+    <title>Sistem Undian Digital</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Font: Inter -->
@@ -33,110 +33,74 @@
         <!-- Header -->
         <header class="mb-6 sm:mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-5">
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    Panel Kontrol Sistem
+                <h1 class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">
+                    Undian Digital Interaktif
                 </h1>
-                <p class="text-xs sm:text-sm text-slate-400 mt-1">Pilih aktivitas terlebih dahulu, lalu jalankan sistem</p>
+                <p class="text-xs sm:text-sm text-slate-400 mt-1">Masukkan daftar peserta dan mulai undian berhadiah</p>
             </div>
             <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/60 text-xs text-slate-300">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                <span>Sistem Terhubung</span>
+                <span>Sistem Siap</span>
             </div>
         </header>
 
         <!-- Main Content Grid -->
         <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 my-auto">
             
-            <!-- Panel Kontrol Utama & Status (Lg: 7 cols) -->
-            <section class="lg:col-span-7 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-5 sm:p-7 shadow-xl flex flex-col justify-between gap-6">
+            <!-- Panel Kontrol & Input Peserta (Lg: 6 cols) -->
+            <section class="lg:col-span-6 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between gap-5">
                 <div>
-                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">Status & Kontrol Utama</h2>
-                    
-                    <!-- Kartu Indikator Status -->
-                    <div id="statusCard" class="relative overflow-hidden rounded-xl border p-5 transition-all duration-300 bg-rose-950/20 border-rose-500/30">
-                        <div class="flex items-center justify-between gap-4">
-                            <div class="flex items-center gap-4">
-                                <div id="statusIconBg" class="relative flex items-center justify-center w-14 h-14 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/40 transition-colors duration-300">
-                                    <i id="statusIcon" class="fa-solid fa-power-off text-2xl"></i>
-                                    <span id="statusPulseRing" class="hidden absolute inset-0 rounded-xl border-2 border-amber-400 animate-ping opacity-75"></span>
-                                </div>
-                                <div>
-                                    <div class="text-xs font-medium text-slate-400 uppercase tracking-widest">Status Saat Ini</div>
-                                    <div id="statusText" class="text-xl sm:text-2xl font-bold text-rose-400 transition-colors duration-300">Stopped / Mati</div>
-                                    <p id="statusDesc" class="text-xs text-slate-400 mt-0.5">Pilih aktivitas di bawah untuk mulai.</p>
-                                </div>
-                            </div>
-                            <div class="hidden sm:flex flex-col items-end">
-                                <span id="statusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                                    <span>Inactive</span>
-                                </span>
-                            </div>
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">1. Masukkan Nama Peserta</h2>
+                    <p class="text-xs text-slate-400 mb-2">Pisahkan nama dengan koma (,) atau baris baru.</p>
+                    <textarea id="inputPeserta" rows="4" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition-colors" placeholder="Contoh: Budi, Siti, Andi, Rina, Joko">Budi Santoso, Siti Aminah, Andi Pratama, Rina Melati, Joko Widodo, Dewi Lestari, Reza Rahadian, Dian Sastro</textarea>
+                </div>
+
+                <!-- Status Kartu Pemenang Utama -->
+                <div id="statusCard" class="relative overflow-hidden rounded-xl border p-4 transition-all duration-300 bg-slate-900/40 border-slate-700">
+                    <div class="flex items-center gap-4">
+                        <div id="statusIconBg" class="relative flex items-center justify-center w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                            <i id="statusIcon" class="fa-solid fa-trophy text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-medium text-slate-400 uppercase tracking-widest">Pemenang Terpilih</div>
+                            <div id="statusText" class="text-lg sm:text-xl font-bold text-amber-400">Belum Diundi</div>
+                            <p id="statusDesc" class="text-xs text-slate-400">Tekan tombol Start untuk mengacak.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Pilihan Aktivitas (1. Pilih Dulu) -->
-                <div>
-                    <div class="flex items-center justify-between mb-3">
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">1. Pilih Aktivitas</label>
-                        <span id="selectedActivityLabel" class="text-xs font-medium text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20">Belum dipilih</span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-3">
-                        <button id="btnCraft" onclick="pilihAktivitas('Craft Satuan', 'fa-hammer', 'text-amber-400')" class="activity-btn flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl bg-slate-900/60 hover:bg-slate-700/50 border border-slate-700/60 transition-all group">
-                            <i class="fa-solid fa-hammer text-amber-400 text-lg group-hover:scale-110 transition-transform"></i>
-                            <span class="text-xs font-medium text-slate-300">Craft Satuan</span>
-                        </button>
-                        <button id="btnBelanja" onclick="pilihAktivitas('Belanja', 'fa-cart-shopping', 'text-indigo-400')" class="activity-btn flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl bg-slate-900/60 hover:bg-slate-700/50 border border-slate-700/60 transition-all group">
-                            <i class="fa-solid fa-cart-shopping text-indigo-400 text-lg group-hover:scale-110 transition-transform"></i>
-                            <span class="text-xs font-medium text-slate-300">Belanja</span>
-                        </button>
-                        <button id="btnMancing" onclick="pilihAktivitas('Mancing', 'fa-fish', 'text-cyan-400')" class="activity-btn flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl bg-slate-900/60 hover:bg-slate-700/50 border border-slate-700/60 transition-all group">
-                            <i class="fa-solid fa-fish text-cyan-400 text-lg group-hover:scale-110 transition-transform"></i>
-                            <span class="text-xs font-medium text-slate-300">Mancing</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Tombol Aksi (2. Start / Stop) -->
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">2. Tindakan Kontrol</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        <button id="btnStart" onclick="handleStart()" disabled class="group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] shadow-lg shadow-emerald-900/30 border border-emerald-500/30 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed">
-                            <i class="fa-solid fa-play text-sm group-hover:scale-110 transition-transform"></i>
-                            <span>START</span>
-                        </button>
-                        <button id="btnStop" onclick="handleStop()" disabled class="group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:scale-[0.98] shadow-lg shadow-rose-900/30 border border-rose-500/30 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed">
-                            <i class="fa-solid fa-square text-sm group-hover:scale-110 transition-transform"></i>
-                            <span>STOP</span>
-                        </button>
-                    </div>
+                <!-- Tombol Aksi Start / Reset -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="btnStart" onclick="mulaiUndian()" class="flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 active:scale-[0.98] shadow-lg shadow-amber-900/30 border border-amber-400/30 transition-all">
+                        <i class="fa-solid fa-play text-xs"></i>
+                        <span>START UNDIAN</span>
+                    </button>
+                    <button onclick="resetUndian()" class="flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-slate-300 bg-slate-900/80 hover:bg-slate-700 border border-slate-700 transition-all">
+                        <i class="fa-solid fa-rotate-left text-xs"></i>
+                        <span>Reset</span>
+                    </button>
                 </div>
 
                 <!-- Statistik Ringkas -->
-                <div class="grid grid-cols-3 gap-3 pt-4 border-t border-slate-700/50 text-center">
+                <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-700/50 text-center">
                     <div class="bg-slate-900/40 p-2.5 rounded-lg border border-slate-800">
-                        <div class="text-xs text-slate-400">Total Klik</div>
-                        <div id="statTotal" class="text-lg font-bold text-slate-200 mt-0.5">0</div>
+                        <div class="text-[11px] text-slate-400">Total Peserta</div>
+                        <div id="statTotal" class="text-base font-bold text-slate-200 mt-0.5">0</div>
                     </div>
                     <div class="bg-slate-900/40 p-2.5 rounded-lg border border-slate-800">
-                        <div class="text-xs text-slate-400">Waktu Jalan</div>
-                        <div id="statUptime" class="text-lg font-bold text-emerald-400 mt-0.5">00:00</div>
-                    </div>
-                    <div class="bg-slate-900/40 p-2.5 rounded-lg border border-slate-800">
-                        <div class="text-xs text-slate-400">Status Awal</div>
-                        <div class="text-lg font-bold text-slate-400 mt-0.5">Mati</div>
+                        <div class="text-[11px] text-slate-400">Total Pemenang</div>
+                        <div id="statPemenang" class="text-base font-bold text-amber-400 mt-0.5">0</div>
                     </div>
                 </div>
             </section>
 
-            <!-- Panel Riwayat Log Aktivitas (Lg: 5 cols) -->
-            <section class="lg:col-span-5 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col h-[400px] lg:h-auto justify-between">
+            <!-- Panel Log Animasi & Riwayat Pemenang (Lg: 6 cols) -->
+            <section class="lg:col-span-6 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col h-[420px] lg:h-auto justify-between">
                 <div>
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-list-ul text-indigo-400 text-sm"></i>
-                            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Log Aktivitas</h2>
+                            <i class="fa-solid fa-dice text-amber-400 text-sm"></i>
+                            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Animasi & Riwayat Undian</h2>
                         </div>
                         <button onclick="clearLogs()" class="text-xs text-slate-400 hover:text-rose-400 transition-colors flex items-center gap-1 bg-slate-900/50 px-2.5 py-1 rounded-md border border-slate-700/50">
                             <i class="fa-solid fa-trash-can text-[10px]"></i>
@@ -144,28 +108,27 @@
                         </button>
                     </div>
                     
-                    <!-- Container List Log -->
-                    <div id="logContainer" class="space-y-2.5 overflow-y-auto max-h-[340px] pr-1.5 text-xs">
-                        <div id="emptyLogState" class="text-center py-12 text-slate-500">
-                            <i class="fa-solid fa-clock-rotate-left text-2xl mb-2 block opacity-40"></i>
-                            Belum ada riwayat aktivitas.
+                    <!-- Container List Log dengan Animasi Scroll -->
+                    <div id="logContainer" class="space-y-2 overflow-y-auto max-h-[320px] pr-1.5 text-xs scroll-smooth">
+                        <div id="emptyLogState" class="text-center py-16 text-slate-500">
+                            <i class="fa-solid fa-ticket text-3xl mb-2 block opacity-40"></i>
+                            Daftar peserta siap diundi. Klik Start!
                         </div>
                     </div>
                 </div>
 
                 <div class="pt-3 border-t border-slate-700/40 text-[11px] text-slate-500 flex justify-between items-center">
-                    <span>Mencatat otomatis setiap perubahan</span>
-                    <span id="logCountText">0 Entri</span>
+                    <span>Gulir otomatis saat pengundian</span>
+                    <span id="logCountText">0 Riwayat</span>
                 </div>
             </section>
         </main>
 
         <!-- Footer -->
         <footer class="mt-8 pt-4 border-t border-slate-800/60 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
-            <div>&copy; 2026 Panel Kontrol Sistem Modern.</div>
+            <div>&copy; 2026 Sistem Undian Digital Modern.</div>
             <div class="flex items-center gap-4">
-                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-circle text-[8px] text-emerald-500"></i> Responsive</span>
-                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-bolt text-[10px] text-amber-400"></i> Realtime UI</span>
+                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-circle text-[8px] text-emerald-500"></i> Live Animation</span>
             </div>
         </footer>
     </div>
