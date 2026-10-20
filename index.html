@@ -35,7 +35,7 @@
                 <h1 class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">
                     Undian Digital Interaktif
                 </h1>
-                <p class="text-xs sm:text-sm text-slate-400 mt-1">Tambah peserta satuan, klik Start, dan Stop untuk memilih pemenang</p>
+                <p class="text-xs sm:text-sm text-slate-400 mt-1">Tambah peserta, klik Start, dan Stop untuk memilih pemenang dengan animasi Header</p>
             </div>
             <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/60 text-xs text-slate-300">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
@@ -52,7 +52,6 @@
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">1. Tambah Nama Peserta (Satuan)</h2>
                     <div class="flex gap-2">
                         <input type="text" id="inputNamaSatuan" class="flex-1 bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition-colors" placeholder="Ketik nama peserta...">
-                        <!-- BAGIAN INI YANG DIPERBAIKI: Menambahkan onclick="tambahPeserta()" -->
                         <button onclick="tambahPeserta()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-md">
                             <i class="fa-solid fa-plus text-[10px]"></i>
                             <span>Tambah</span>
@@ -60,16 +59,19 @@
                     </div>
                 </div>
 
-                <!-- Status Kartu Pemenang Utama -->
-                <div id="statusCard" class="relative overflow-hidden rounded-xl border p-4 transition-all duration-300 bg-slate-900/40 border-slate-700">
+                <!-- Status Kartu Pemenang Utama (Animasi Header) -->
+                <div id="statusCard" class="relative overflow-hidden rounded-xl border p-5 transition-all duration-300 bg-slate-900/60 border-slate-700 shadow-inner">
                     <div class="flex items-center gap-4">
-                        <div id="statusIconBg" class="relative flex items-center justify-center w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
-                            <i id="statusIcon" class="fa-solid fa-trophy text-xl"></i>
+                        <div id="statusIconBg" class="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                            <i id="statusIcon" class="fa-solid fa-trophy text-2xl"></i>
                         </div>
-                        <div>
-                            <div class="text-[10px] font-medium text-slate-400 uppercase tracking-widest">Pemenang Terpilih</div>
-                            <div id="statusText" class="text-lg sm:text-xl font-bold text-amber-400">Belum Diundi</div>
-                            <p id="statusDesc" class="text-xs text-slate-400">Tekan Start lalu Stop untuk menguji keberuntungan.</p>
+                        <div class="overflow-hidden">
+                            <div class="text-[10px] font-medium text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                <span>Pemenang Terpilih</span>
+                                <span id="emojiBadge" class="text-sm">🎯</span>
+                            </div>
+                            <div id="statusText" class="text-xl sm:text-2xl font-extrabold text-amber-400 truncate transition-all">Belum Diundi</div>
+                            <p id="statusDesc" class="text-xs text-slate-400 mt-0.5">Tekan Start lalu Stop untuk menguji keberuntungan.</p>
                         </div>
                     </div>
                 </div>
@@ -89,7 +91,7 @@
                 <!-- Statistik Ringkas -->
                 <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-700/50 text-center">
                     <div class="bg-slate-900/40 p-2.5 rounded-lg border border-slate-800">
-                        <div class="text-[11px] text-slate-400">Total Peserta</div>
+                        <div class="text-[11px] text-slate-400">Total Peserta Aktif</div>
                         <div id="statTotal" class="text-base font-bold text-slate-200 mt-0.5">0</div>
                     </div>
                     <div class="bg-slate-900/40 p-2.5 rounded-lg border border-slate-800">
@@ -99,22 +101,22 @@
                 </div>
             </section>
 
-            <!-- Panel Animasi Geser & Riwayat (Lg: 6 cols) -->
+            <!-- Panel Daftar Peserta & Riwayat (Lg: 6 cols) -->
             <section class="lg:col-span-6 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col h-[420px] lg:h-auto justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-dice text-amber-400 text-sm"></i>
-                            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Animasi & Daftar Peserta</h2>
+                            <i class="fa-solid fa-users text-amber-400 text-sm"></i>
+                            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Daftar Peserta & Riwayat</h2>
                         </div>
                         <button onclick="clearLogs()" class="text-xs text-slate-400 hover:text-rose-400 transition-colors flex items-center gap-1 bg-slate-900/50 px-2.5 py-1 rounded-md border border-slate-700/50">
                             <i class="fa-solid fa-trash-can text-[10px]"></i>
-                            <span>Bersihkan</span>
+                            <span>Reset Semua</span>
                         </button>
                     </div>
                     
-                    <!-- Container List Animasi / Riwayat -->
-                    <div id="logContainer" class="space-y-2 overflow-y-auto max-h-[320px] pr-1.5 text-xs scroll-smooth">
+                    <!-- Container List Peserta -->
+                    <div id="logContainer" class="space-y-2 overflow-y-auto max-h-[320px] pr-1.5 text-xs">
                         <div id="emptyLogState" class="text-center py-16 text-slate-500">
                             <i class="fa-solid fa-users text-3xl mb-2 block opacity-40"></i>
                             Belum ada peserta. Masukkan nama dan klik Tambah!
@@ -123,7 +125,7 @@
                 </div>
 
                 <div class="pt-3 border-t border-slate-700/40 text-[11px] text-slate-500 flex justify-between items-center">
-                    <span>Gulir otomatis aktif saat di-start</span>
+                    <span>Nama pemenang dapat dipakai ulang</span>
                     <span id="logCountText">0 Peserta</span>
                 </div>
             </section>
@@ -133,7 +135,7 @@
         <footer class="mt-8 pt-4 border-t border-slate-800/60 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
             <div>&copy; 2026 Sistem Undian Digital Modern.</div>
             <div class="flex items-center gap-4">
-                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-circle text-[8px] text-emerald-500"></i> Interactive Animation</span>
+                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-circle text-[8px] text-emerald-500"></i> Header Animation Ready</span>
             </div>
         </footer>
     </div>
