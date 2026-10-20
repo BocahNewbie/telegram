@@ -36,7 +36,7 @@
                 <h1 class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                     Panel Kontrol Sistem
                 </h1>
-                <p class="text-xs sm:text-sm text-slate-400 mt-1">Kelola status operasional dan pilih menu aktivitas</p>
+                <p class="text-xs sm:text-sm text-slate-400 mt-1">Pilih aktivitas terlebih dahulu, lalu jalankan sistem</p>
             </div>
             <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/60 text-xs text-slate-300">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
@@ -63,7 +63,7 @@
                                 <div>
                                     <div class="text-xs font-medium text-slate-400 uppercase tracking-widest">Status Saat Ini</div>
                                     <div id="statusText" class="text-xl sm:text-2xl font-bold text-rose-400 transition-colors duration-300">Stopped / Mati</div>
-                                    <p id="statusDesc" class="text-xs text-slate-400 mt-0.5">Sistem berada dalam kondisi mati.</p>
+                                    <p id="statusDesc" class="text-xs text-slate-400 mt-0.5">Pilih aktivitas di bawah untuk mulai.</p>
                                 </div>
                             </div>
                             <div class="hidden sm:flex flex-col items-end">
@@ -76,36 +76,39 @@
                     </div>
                 </div>
 
-                <!-- Tombol Aksi (Start & Stop) -->
+                <!-- Pilihan Aktivitas (1. Pilih Dulu) -->
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Tindakan Kontrol</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        <button id="btnStart" onclick="handleStart()" class="group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] shadow-lg shadow-emerald-900/30 border border-emerald-500/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="fa-solid fa-play text-sm group-hover:scale-110 transition-transform"></i>
-                            <span>START</span>
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">1. Pilih Aktivitas</label>
+                        <span id="selectedActivityLabel" class="text-xs font-medium text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20">Belum dipilih</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button id="btnCraft" onclick="pilihAktivitas('Craft Satuan', 'fa-hammer', 'text-amber-400')" class="activity-btn flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl bg-slate-900/60 hover:bg-slate-700/50 border border-slate-700/60 transition-all group">
+                            <i class="fa-solid fa-hammer text-amber-400 text-lg group-hover:scale-110 transition-transform"></i>
+                            <span class="text-xs font-medium text-slate-300">Craft Satuan</span>
                         </button>
-                        <button id="btnStop" onclick="handleStop()" disabled class="group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:scale-[0.98] shadow-lg shadow-rose-900/30 border border-rose-500/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="fa-solid fa-square text-sm group-hover:scale-110 transition-transform"></i>
-                            <span>STOP</span>
+                        <button id="btnBelanja" onclick="pilihAktivitas('Belanja', 'fa-cart-shopping', 'text-indigo-400')" class="activity-btn flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl bg-slate-900/60 hover:bg-slate-700/50 border border-slate-700/60 transition-all group">
+                            <i class="fa-solid fa-cart-shopping text-indigo-400 text-lg group-hover:scale-110 transition-transform"></i>
+                            <span class="text-xs font-medium text-slate-300">Belanja</span>
+                        </button>
+                        <button id="btnMancing" onclick="pilihAktivitas('Mancing', 'fa-fish', 'text-cyan-400')" class="activity-btn flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl bg-slate-900/60 hover:bg-slate-700/50 border border-slate-700/60 transition-all group">
+                            <i class="fa-solid fa-fish text-cyan-400 text-lg group-hover:scale-110 transition-transform"></i>
+                            <span class="text-xs font-medium text-slate-300">Mancing</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Menu Pilihan Baru: Craft Satuan, Belanja, Mancing -->
+                <!-- Tombol Aksi (2. Start / Stop) -->
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Pilihan Aktivitas</label>
-                    <div class="grid grid-cols-3 gap-3">
-                        <button onclick="pilihAktivitas('Craft Satuan', 'fa-hammer', 'text-amber-400')" class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-slate-900/60 hover:bg-slate-700/50 border border-slate-700/60 transition-all group">
-                            <i class="fa-solid fa-hammer text-amber-400 text-lg group-hover:scale-110 transition-transform"></i>
-                            <span class="text-xs font-medium text-slate-300">Craft Satuan</span>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">2. Tindakan Kontrol</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <button id="btnStart" onclick="handleStart()" disabled class="group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] shadow-lg shadow-emerald-900/30 border border-emerald-500/30 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-play text-sm group-hover:scale-110 transition-transform"></i>
+                            <span>START</span>
                         </button>
-                        <button onclick="pilihAktivitas('Belanja', 'fa-cart-shopping', 'text-indigo-400')" class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-slate-900/60 hover:bg-slate-700/50 border border-slate-700/60 transition-all group">
-                            <i class="fa-solid fa-cart-shopping text-indigo-400 text-lg group-hover:scale-110 transition-transform"></i>
-                            <span class="text-xs font-medium text-slate-300">Belanja</span>
-                        </button>
-                        <button onclick="pilihAktivitas('Mancing', 'fa-fish', 'text-cyan-400')" class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-slate-900/60 hover:bg-slate-700/50 border border-slate-700/60 transition-all group">
-                            <i class="fa-solid fa-fish text-cyan-400 text-lg group-hover:scale-110 transition-transform"></i>
-                            <span class="text-xs font-medium text-slate-300">Mancing</span>
+                        <button id="btnStop" onclick="handleStop()" disabled class="group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:scale-[0.98] shadow-lg shadow-rose-900/30 border border-rose-500/30 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-square text-sm group-hover:scale-110 transition-transform"></i>
+                            <span>STOP</span>
                         </button>
                     </div>
                 </div>
@@ -142,7 +145,7 @@
                     </div>
                     
                     <!-- Container List Log -->
-                    <div id="logContainer" class="space-y-2.5 overflow-y-auto max-h-[290px] pr-1.5 text-xs">
+                    <div id="logContainer" class="space-y-2.5 overflow-y-auto max-h-[340px] pr-1.5 text-xs">
                         <div id="emptyLogState" class="text-center py-12 text-slate-500">
                             <i class="fa-solid fa-clock-rotate-left text-2xl mb-2 block opacity-40"></i>
                             Belum ada riwayat aktivitas.
