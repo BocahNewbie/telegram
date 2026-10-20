@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Kontrol & Indikator Status</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for activity log */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 1);
+        }
+    </style>
+</head>
+<body class="h-full font-sans antialiased bg-slate-900 text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Container Utama -->
+    <div class="min-h-full flex flex-col justify-between p-4 sm:p-6 md:p-8 max-w-5xl mx-auto w-full">
+        
+        <!-- Header -->
+        <header class="mb-6 sm:mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-5">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    Panel Kontrol Sistem
+                </h1>
+                <p class="text-xs sm:text-sm text-slate-400 mt-1">Kelola status operasional dan pantau riwayat aktivitas secara langsung</p>
+            </div>
+            <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/60 text-xs text-slate-300">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span>Sistem Terhubung</span>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 my-auto">
+            
+            <!-- Panel Kontrol Utama & Status (Lg: 7 cols) -->
+            <section class="lg:col-span-7 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-5 sm:p-7 shadow-xl flex flex-col justify-between gap-6">
+                
+                <div>
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">Status & Kontrol Utama</h2>
+                    
+                    <!-- Kartu Indikator Status di Samping/Atas -->
+                    <div id="statusCard" class="relative overflow-hidden rounded-xl border p-5 transition-all duration-300 bg-rose-950/20 border-rose-500/30">
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-4">
+                                <!-- Status Icon Container dengan Efek Pulsing -->
+                                <div id="statusIconBg" class="relative flex items-center justify-center w-14 h-14 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/40 transition-colors duration-300">
+                                    <i id="statusIcon" class="fa-solid fa-power-off text-2xl"></i>
+                                    <!-- Ring Animasi khusus saat Processing / Active -->
+                                    <span id="statusPulseRing" class="hidden absolute inset-0 rounded-xl border-2 border-amber-400 animate-ping opacity-75"></span>
+                                </div>
+                                
+                                <div>
+                                    <div class="text-xs font-medium text-slate-400 uppercase tracking-widest">Status Saat Ini</div>
+                                    <div id="statusText" class="text-xl sm:text-2xl font-bold text-rose-400 transition-colors duration-300">
+                                        Stopped / Mati
+                                    </div>
+                                    <p id="statusDesc" class="text-xs text-slate-400 mt-0.5">Sistem berada dalam kondisi mati.</p>
+                                </div>
+                            </div>
+
+                            <!-- Badge Animasi Sederhana -->
+                            <div class="hidden sm:flex flex-col items-end">
+                                <span id="statusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                    <span>Inactive</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tombol Aksi (Start & Stop) -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Tindakan Kontrol</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        
+                        <!-- Tombol START -->
+                        <button id="btnStart" onclick="handleStart()" class="group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] shadow-lg shadow-emerald-900/30 border border-emerald-500/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100">
+                            <i class="fa-solid fa-play text-sm group-hover:scale-110 transition-transform"></i>
+                            <span>START</span>
+                        </button>
+
+                        <!-- Tombol STOP -->
+                        <button id="btnStop" onclick="handleStop()" disabled class="group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:scale-[0.98] shadow-lg shadow-rose-900/30 border border-rose-500/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100">
+                            <i class="fa-solid fa-square text-sm group-hover:scale-110 transition-transform"></i>
+                            <span>STOP</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Statistik Ringkas -->
+                <div class="grid grid-cols-3 gap-3 pt-4 border-t border-slate-700/50 text-center">
+                    <div class="bg-slate-900/40 p-2.5 rounded-lg border border-slate-800">
+                        <div class="text-xs text-slate-400">Total Klik</div>
+                        <div id="statTotal" class="text-lg font-bold text-slate-200 mt-0.5">0</div>
+                    </div>
+                    <div class="bg-slate-900/40 p-2.5 rounded-lg border border-slate-800">
+                        <div class="text-xs text-slate-400">Waktu Jalan</div>
+                        <div id="statUptime" class="text-lg font-bold text-emerald-400 mt-0.5">00:00</div>
+                    </div>
+                    <div class="bg-slate-900/40 p-2.5 rounded-lg border border-slate-800">
+                        <div class="text-xs text-slate-400">Status Awal</div>
+                        <div class="text-lg font-bold text-slate-400 mt-0.5">Mati</div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Panel Riwayat Log Aktivitas (Lg: 5 cols) -->
+            <section class="lg:col-span-5 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col h-[400px] lg:h-auto justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-list-ul text-indigo-400 text-sm"></i>
+                            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Log Aktivitas</h2>
+                        </div>
+                        <button onclick="clearLogs()" class="text-xs text-slate-400 hover:text-rose-400 transition-colors flex items-center gap-1 bg-slate-900/50 px-2.5 py-1 rounded-md border border-slate-700/50">
+                            <i class="fa-solid fa-trash-can text-[10px]"></i>
+                            <span>Bersihkan</span>
+                        </button>
+                    </div>
+
+                    <!-- Container List Log -->
+                    <div id="logContainer" class="space-y-2.5 overflow-y-auto max-h-[290px] pr-1.5 text-xs">
+                        <div id="emptyLogState" class="text-center py-12 text-slate-500">
+                            <i class="fa-solid fa-clock-rotate-left text-2xl mb-2 block opacity-40"></i>
+                            Belum ada riwayat aktivitas.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-700/40 text-[11px] text-slate-500 flex justify-between items-center">
+                    <span>Mencatat otomatis setiap perubahan</span>
+                    <span id="logCountText">0 Entri</span>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-8 pt-4 border-t border-slate-800/60 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div>&copy; 2026 Panel Kontrol Sistem Modern.</div>
+            <div class="flex items-center gap-4">
+                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-circle text-[8px] text-emerald-500"></i> Responsive</span>
+                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-bolt text-[10px] text-amber-400"></i> Realtime UI</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Script Logika Aplikasi -->
+    <script>
+        // State Manajemen Aplikasi
+        // State: 'STOPPED', 'PROCESSING', 'RUNNING'
+        let currentState = 'STOPPED'; 
+        let totalClickCount = 0;
+        let uptimeSeconds = 0;
+        let uptimeTimer = null;
+        let processingTimeout = null;
+
+        // Referensi Elemen DOM
+        const statusCard = document.getElementById('statusCard');
+        const statusIconBg = document.getElementById('statusIconBg');
+        const statusIcon = document.getElementById('statusIcon');
+        const statusText = document.getElementById('statusText');
+        const statusDesc = document.getElementById('statusDesc');
+        const statusBadge = document.getElementById('statusBadge');
+        const statusPulseRing = document.getElementById('statusPulseRing');
+        
+        const btnStart = document.getElementById('btnStart');
+        const btnStop = document.getElementById('btnStop');
+        
+        const logContainer = document.getElementById('logContainer');
+        const emptyLogState = document.getElementById('emptyLogState');
+        const logCountText = document.getElementById('logCountText');
+        const statTotal = document.getElementById('statTotal');
+        const statUptime = document.getElementById('statUptime');
+
+        // Mengubah Tampilan Berdasarkan Status
+        function updateUIState(state) {
+            currentState = state;
+
+            // Reset Kelas Warna Umum
+            statusCard.className = "relative overflow-hidden rounded-xl border p-5 transition-all duration-300 ";
+            statusIconBg.className = "relative flex items-center justify-center w-14 h-14 rounded-xl transition-all duration-300 ";
+            statusPulseRing.classList.add('hidden');
+
+            if (state === 'STOPPED') {
+                // Tampilan Stopped (Warna Merah / Rose)
+                statusCard.classList.add('bg-rose-950/20', 'border-rose-500/30');
+                statusIconBg.classList.add('bg-rose-500/20', 'text-rose-400', 'border', 'border-rose-500/40');
+                statusIcon.className = "fa-solid fa-power-off text-2xl";
+                statusText.className = "text-xl sm:text-2xl font-bold text-rose-400";
+                statusText.innerText = "Stopped / Mati";
+                statusDesc.innerText = "Sistem berada dalam kondisi non-aktif.";
+                
+                statusBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30";
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Mati</span>`;
+
+                btnStart.disabled = false;
+                btnStop.disabled = true;
+
+                stopTimer();
+
+            } else if (state === 'PROCESSING') {
+                // Tampilan Processing (Warna Kuning / Amber + Pulsing)
+                statusCard.classList.add('bg-amber-950/20', 'border-amber-500/40');
+                statusIconBg.classList.add('bg-amber-500/20', 'text-amber-400', 'border', 'border-amber-500/50');
+                statusIcon.className = "fa-solid fa-spinner text-2xl animate-spin";
+                statusPulseRing.classList.remove('hidden');
+                
+                statusText.className = "text-xl sm:text-2xl font-bold text-amber-400 animate-pulse";
+                statusText.innerText = "Processing / Memproses...";
+                statusDesc.innerText = "Menyiapkan dan menginisialisasi sistem...";
+                
+                statusBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30";
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span><span>Proses</span>`;
+
+                btnStart.disabled = true;
+                btnStop.disabled = true;
+
+            } else if (state === 'RUNNING') {
+                // Tampilan Running (Warna Hijau / Emerald + Glow)
+                statusCard.classList.add('bg-emerald-950/20', 'border-emerald-500/30');
+                statusIconBg.classList.add('bg-emerald-500/20', 'text-emerald-400', 'border', 'border-emerald-500/40', 'shadow-lg', 'shadow-emerald-500/20');
+                statusIcon.className = "fa-solid fa-play text-2xl animate-pulse-slow";
+                
+                statusText.className = "text-xl sm:text-2xl font-bold text-emerald-400";
+                statusText.innerText = "Running / Aktif";
+                statusDesc.innerText = "Sistem berjalan dan berfungsi secara optimal.";
+                
+                statusBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span>Aktif</span>`;
+
+                btnStart.disabled = true;
+                btnStop.disabled = false;
+
+                startTimer();
+            }
+        }
+
+        // Handler saat tombol Start ditekan
+        function handleStart() {
+            if (currentState !== 'STOPPED') return;
+
+            incrementClick();
+            addLogEntry('START', 'Menekan tombol Start. Memulai proses inisialisasi...', 'text-amber-400');
+            
+            // Masuk ke status Processing terlebih dahulu
+            updateUIState('PROCESSING');
+
+            // Simulasi delay proses 1.8 detik
+            processingTimeout = setTimeout(() => {
+                updateUIState('RUNNING');
+                addLogEntry('RUNNING', 'Sistem berhasil diaktifkan dan berjalan.', 'text-emerald-400');
+            }, 1800);
+        }
+
+        // Handler saat tombol Stop ditekan
+        function handleStop() {
+            if (currentState !== 'RUNNING' && currentState !== 'PROCESSING') return;
+
+            clearTimeout(processingTimeout);
+            incrementClick();
+
+            updateUIState('STOPPED');
+            addLogEntry('STOP', 'Menekan tombol Stop. Sistem telah dimatikan.', 'text-rose-400');
+        }
+
+        // Menambahkan Catatan Aktivitas ke Log
+        function addLogEntry(type, message, colorClass) {
+            // Sembunyikan empty state jika ada
+            if (emptyLogState) {
+                emptyLogState.style.display = 'none';
+            }
+
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const logItem = document.createElement('div');
+            logItem.className = 'flex items-start gap-3 p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 transform transition-all duration-300 translate-y-[-4px] opacity-0';
+
+            let iconTag = '';
+            if (type === 'START') {
+                iconTag = `<span class="p-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20"><i class="fa-solid fa-hourglass-half text-[11px]"></i></span>`;
+            } else if (type === 'RUNNING') {
+                iconTag = `<span class="p-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="fa-solid fa-check text-[11px]"></i></span>`;
+            } else {
+                iconTag = `<span class="p-1 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20"><i class="fa-solid fa-ban text-[11px]"></i></span>`;
+            }
+
+            logItem.innerHTML = `
+                ${iconTag}
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold ${colorClass}">${type}</span>
+                        <span class="text-[10px] text-slate-500">${timeString}</span>
+                    </div>
+                    <p class="text-slate-300 mt-0.5 truncate">${message}</p>
+                </div>
+            `;
+
+            // Sisipkan di paling atas log
+            logContainer.insertBefore(logItem, logContainer.firstChild);
+
+            // Animasi Fade In
+            setTimeout(() => {
+                logItem.classList.remove('translate-y-[-4px]', 'opacity-0');
+            }, 10);
+
+            updateLogCount();
+        }
+
+        // Counter total klik
+        function incrementClick() {
+            totalClickCount++;
+            statTotal.innerText = totalClickCount;
+        }
+
+        // Timer Uptime
+        function startTimer() {
+            stopTimer();
+            uptimeTimer = setInterval(() => {
+                uptimeSeconds++;
+                const mins = Math.floor(uptimeSeconds / 60).toString().padStart(2, '0');
+                const secs = (uptimeSeconds % 60).toString().padStart(2, '0');
+                statUptime.innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (uptimeTimer) {
+                clearInterval(uptimeTimer);
+                uptimeTimer = null;
+            }
+        }
+
+        // Membersihkan Riwayat Log
+        function clearLogs() {
+            logContainer.innerHTML = '';
+            const emptyState = document.createElement('div');
+            emptyState.id = 'emptyLogState';
+            emptyState.className = 'text-center py-12 text-slate-500';
+            emptyState.innerHTML = `
+                <i class="fa-solid fa-clock-rotate-left text-2xl mb-2 block opacity-40"></i>
+                Belum ada riwayat aktivitas.
+            `;
+            logContainer.appendChild(emptyState);
+            updateLogCount();
+        }
+
+        // Memperbarui jumlah total log yang ada
+        function updateLogCount() {
+            const items = logContainer.querySelectorAll('.flex.items-start');
+            logCountText.innerText = `${items.length} Entri`;
+        }
+
+        // Inisialisasi awal
+        window.onload = function() {
+            updateUIState('STOPPED');
+        };
+    </script>
+</body>
+</html>
