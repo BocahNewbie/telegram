@@ -1,349 +1,190 @@
-//Craft Beef Satuan
-const { TelegramClient } = require('telegram');
-const { StoreSession } = require('telegram/sessions');
-const { NewMessage } = require('telegram/events');
-const input = require('input');
+// State Manajemen Aplikasi
+let currentState = 'STOPPED';
+let totalClickCount = 0;
+let uptimeSeconds = 0;
+let uptimeTimer = null;
+let processingTimeout = null;
 
-const apiId = 37104417;
-const apiHash = 'bf947a0fb655cd13aa78dbd4cf775199'; 
-const stringSession = new StoreSession('session_konoha');
+// Referensi Elemen DOM
+const statusCard = document.getElementById('statusCard');
+const statusIconBg = document.getElementById('statusIconBg');
+const statusIcon = document.getElementById('statusIcon');
+const statusText = document.getElementById('statusText');
+const statusDesc = document.getElementById('statusDesc');
+const statusBadge = document.getElementById('statusBadge');
+const statusPulseRing = document.getElementById('statusPulseRing');
+const btnStart = document.getElementById('btnStart');
+const btnStop = document.getElementById('btnStop');
+const logContainer = document.getElementById('logContainer');
+const emptyLogState = document.getElementById('emptyLogState');
+const logCountText = document.getElementById('logCountText');
+const statTotal = document.getElementById('statTotal');
+const statUptime = document.getElementById('statUptime');
 
-async function main() {
-    console.log('Menghubungkan ke Telegram...');
-    const client = new TelegramClient(stringSession, apiId, apiHash, {
-        connectionRetries: 5,
-    });
+// Mengubah Tampilan Berdasarkan Status
+function updateUIState(state) {
+    currentState = state;
+    
+    // Reset Kelas Warna Umum
+    statusCard.className = "relative overflow-hidden rounded-xl border p-5 transition-all duration-300 ";
+    statusIconBg.className = "relative flex items-center justify-center w-14 h-14 rounded-xl transition-all duration-300 ";
+    statusPulseRing.classList.add('hidden');
 
-    await client.start({
-        phoneNumber: async () => await input.text('Masukkan nomor HP Telegrammu (contoh: +628xxx): '),
-        password: async () => await input.text('Masukkan Password 2FA (jika ada): '),
-        phoneCode: async () => await input.text('Masukkan kode OTP yang masuk ke Telegram: '),
-        onError: (err) => console.log(err),
-    });
-
-    console.log('Berhasil login! Userbot Crafting aktif...');
-
-    client.addEventHandler(async (event) => {
-        const message = event.message;
-        if (!message || !message.text) return;
-
-        const text = message.text;
-        let replyText = '';
-
-        // Pola Regex tangkapan pesan crafting
-        if (/Pembelian Berhasil!/i.test(text)) {
-            replyText = "Craft beef";
-        }
-        else if (/Crafting Berhasil!/i.test(text)) {
-            replyText = "Craft Beef";
-        }
-        else if (/Energi tidak cukup/i.test(text)) {
-            replyText = "Use Pizza";
-        }
-        else if (/Makanan telah dinikmati!/i.test(text)) {
-            replyText = "Craft Beef";
-        }
-        else if (/Material Tidak Cukup/i.test(text)) {
-            replyText = "Buy Sapi 99";
-        }
-
-        if (replyText) {
-            console.log(`[TERDETEKSI] Pesan game masuk: "${text.substring(0, 30)}..."`);
-            console.log(`Mengirim balasan otomatis: "${replyText}"`);
-            
-            setTimeout(async () => {
-                try {
-                    await client.sendMessage(message.chatId, {
-                        message: replyText,
-                        replyTo: message.id 
-                    });
-                    console.log('Berhasil mengirim balasan!');
-                } catch (err) {
-                    console.log('Gagal mengirim pesan:', err);
-                }
-            }, 1500);
-        }
-    }, new NewMessage({ incoming: true }));
+    if (state === 'STOPPED') {
+        statusCard.classList.add('bg-rose-950/20', 'border-rose-500/30');
+        statusIconBg.classList.add('bg-rose-500/20', 'text-rose-400', 'border', 'border-rose-500/40');
+        statusIcon.className = "fa-solid fa-power-off text-2xl";
+        statusText.className = "text-xl sm:text-2xl font-bold text-rose-400";
+        statusText.innerText = "Stopped / Mati";
+        statusDesc.innerText = "Sistem berada dalam kondisi non-aktif.";
+        statusBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30";
+        statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Mati</span>`;
+        btnStart.disabled = false;
+        btnStop.disabled = true;
+        stopTimer();
+    } else if (state === 'PROCESSING') {
+        statusCard.classList.add('bg-amber-950/20', 'border-amber-500/40');
+        statusIconBg.classList.add('bg-amber-500/20', 'text-amber-400', 'border', 'border-amber-500/50');
+        statusIcon.className = "fa-solid fa-spinner text-2xl animate-spin";
+        statusPulseRing.classList.remove('hidden');
+        statusText.className = "text-xl sm:text-2xl font-bold text-amber-400 animate-pulse";
+        statusText.innerText = "Processing / Memproses...";
+        statusDesc.innerText = "Menyiapkan dan menginisialisasi sistem...";
+        statusBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span><span>Proses</span>`;
+        btnStart.disabled = true;
+        btnStop.disabled = true;
+    } else if (state === 'RUNNING') {
+        statusCard.classList.add('bg-emerald-950/20', 'border-emerald-500/30');
+        statusIconBg.classList.add('bg-emerald-500/20', 'text-emerald-400', 'border', 'border-emerald-500/40', 'shadow-lg', 'shadow-emerald-500/20');
+        statusIcon.className = "fa-solid fa-play text-2xl animate-pulse-slow";
+        statusText.className = "text-xl sm:text-2xl font-bold text-emerald-400";
+        statusText.innerText = "Running / Aktif";
+        statusDesc.innerText = "Sistem berjalan dan berfungsi secara optimal.";
+        statusBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+        statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span>Aktif</span>`;
+        btnStart.disabled = true;
+        btnStop.disabled = false;
+        startTimer();
+    }
 }
 
-main();
-
-
-//Mancing
-const { TelegramClient } = require('telegram');
-const { StoreSession } = require('telegram/sessions');
-const { NewMessage } = require('telegram/events');
-const input = require('input');
-
-const apiId = 37104417;
-const apiHash = 'bf947a0fb655cd13aa78dbd4cf775199'; 
-const stringSession = new StoreSession('session_konoha');
-
-async function main() {
-    console.log('Menghubungkan ke Telegram...');
-    const client = new TelegramClient(stringSession, apiId, apiHash, {
-        connectionRetries: 5,
-    });
-
-    await client.start({
-        phoneNumber: async () => await input.text('Masukkan nomor HP Telegrammu (contoh: +628xxx): '),
-        password: async () => await input.text('Masukkan Password 2FA (jika ada): '),
-        phoneCode: async () => await input.text('Masukkan kode OTP yang masuk ke Telegram: '),
-        onError: (err) => console.log(err),
-    });
-
-    console.log('Berhasil login! Userbot aktif dan siap memantau pesan masuk...');
-
-    let lastLocation = 'Fish River'; // Default lokasi mancing
-
-    // Menggunakan event NewMessage bawaan GramJS yang lebih akurat
-    client.addEventHandler(async (event) => {
-        const message = event.message;
-        if (!message || !message.text) return;
-
-        const text = message.text;
-        let replyText = '';
-
-        // 1. Cek aturan berdasarkan JSON/kondisi game
-        if (text.includes('Energi Tidak Cukup')) {
-            replyText = 'Use Pizza';
-        } 
-        else if (
-            text.includes('Kamu Mendapat Ikan!') ||
-            text.includes('Wow! Tangkapan Langka!') ||
-            text.includes('Ups! Kamu Mendapat Sampah!') ||
-            text.includes('Tangkapan Keberuntungan!') ||
-            text.includes('Makanan Telah Dinikmati!') ||
-            text.includes('Ikan Legendaris Tertangkap!') ||
-            text.includes('Item Langka Ditemukan!') ||
-            text.includes('Equipment Dipakai!') ||
-	    text.includes('MASIH PINGSAN')
-        ) {
-            // Mengikuti lokasi terakhir (River atau Sea)
-            replyText = lastLocation;
-        }
-
-        // 2. Jika ada balasan yang cocok, kirimkan dengan fitur reply (mengutip pesan)
-        if (replyText) {
-            console.log(`[TERDETEKSI] Pesan game masuk: "${text.substring(0, 30)}..."`);
-            console.log(`Mengirim balasan otomatis: "${replyText}"`);
-            
-            setTimeout(async () => {
-                try {
-                    await client.sendMessage(message.chatId, {
-                        message: replyText,
-                        replyTo: message.id 
-                    });
-                    console.log('Berhasil mengirim balasan!');
-                } catch (err) {
-                    console.log('Gagal mengirim pesan:', err);
-                }
-            }, 1500); // Jeda 1.5 detik
-        }
-
-        // 3. Memantau pesan yang KELUAR dari akunmu sendiri untuk mendeteksi pilihan lokasi
-        if (message.out) {
-            if (text.toLowerCase().includes('fish river')) {
-                lastLocation = 'Fish River';
-                console.log('Lokasi diset ke: Fish River');
-            } else if (text.toLowerCase().includes('fish sea')) {
-                lastLocation = 'Fish Sea';
-                console.log('Lokasi diset ke: Fish Sea');
-            }
-        }
-    }, new NewMessage({ incoming: true, outgoing: true }));
+// Handler saat tombol Start ditekan
+function handleStart() {
+    if (currentState !== 'STOPPED') return;
+    incrementClick();
+    addLogEntry('START', 'Menekan tombol Start. Memulai proses inisialisasi...', 'text-amber-400');
+    updateUIState('PROCESSING');
+    
+    processingTimeout = setTimeout(() => {
+        updateUIState('RUNNING');
+        addLogEntry('RUNNING', 'Sistem berhasil diaktifkan dan berjalan.', 'text-emerald-400');
+    }, 1800);
 }
 
-main();
-
-//Belanja
-const { TelegramClient } = require('telegram');
-const { StoreSession } = require('telegram/sessions');
-const { NewMessage } = require('telegram/events');
-const input = require('input');
-
-const apiId = 37104417;
-const apiHash = 'bf947a0fb655cd13aa78dbd4cf775199'; 
-const stringSession = new StoreSession('session_konoha');
-
-async function main() {
-    console.log('Menghubungkan ke Telegram...');
-    const client = new TelegramClient(stringSession, apiId, apiHash, {
-        connectionRetries: 5,
-    });
-
-    await client.start({
-        phoneNumber: async () => await input.text('Masukkan nomor HP Telegrammu (contoh: +628xxx): '),
-        password: async () => await input.text('Masukkan Password 2FA (if any): '),
-        phoneCode: async () => await input.text('Masukkan kode OTP yang masuk ke Telegram: '),
-        onError: (err) => console.log(err),
-    });
-
-    console.log('Berhasil login! Userbot siap memantau aktivitas merchant/pertanian...');
-
-    let isPaused = false;
-
-    client.addEventHandler(async (event) => {
-        const message = event.message;
-        if (!message || !message.text) return;
-
-        const text = message.text;
-
-        // Kontrol Pause / Resume lewat ketikan manualmu sendiri
-        if (message.out) {
-            if (text.toLowerCase() === 'pause') {
-                isPaused = true;
-                console.log('--- BOT DI-PAUSE ---');
-                return;
-            } else if (text.toLowerCase() === 'resume') {
-                isPaused = false;
-                console.log('--- BOT DILANJUTKAN ---');
-                return;
-            }
-        }
-
-        if (isPaused) return;
-
-        let replyText = '';
-
-        // Menerapkan pola Regex sesuai JSON kamu
-        // 1. Pola Sisa Stok besar (>100) -> Buy [Item] 99
-        let matchStokBesar = text.match(/\d+×\s*.*?([A-Za-z]+(?:\s+[A-Za-z]+)?)[^]*?Sisa Stok:\s*([1-9]\d{2,})\b/);
-        if (matchStokBesar) {
-            let item = matchStokBesar[1].trim();
-            replyText = `Buy ${item} 99`;
-        }
-
-        // 2. Pola Sisa Stok kecil (1-99 unit) -> Buy [Item] [Jumlah]
-        else if (text.match(/\d+×\s*.*?([A-Za-z]+(?:\s+[A-Za-z]+)?)[^]*?Sisa Stok:\s*([1-9]\d?)\s*unit/)) {
-            let m = text.match(/\d+×\s*.*?([A-Za-z]+(?:\s+[A-Za-z]+)?)[^]*?Sisa Stok:\s*([1-9]\d?)\s*unit/);
-            replyText = `Buy ${m[1].trim()} ${m[2]}`;
-        }
-
-        // 3. Pola Stok saat ini hanya: [X]
-        else if (text.match(/untuk[^]*?([A-Za-z]+(?:\s+[A-Za-z]+)?)[^]*?Stok saat ini hanya:\s*(\d+)/)) {
-            let m = text.match(/untuk[^]*?([A-Za-z]+(?:\s+[A-Za-z]+)?)[^]*?Stok saat ini hanya:\s*(\d+)/);
-            replyText = `Buy ${m[1].trim()} ${m[2]}`;
-        }
-
-        // 4. Pembelian Berhasil Berurutan (Rotasi Tanaman)
-        else if (/Pembelian Berhasil![^]*?Wheat[^]*?Kamu punya:/.test(text)) {
-            replyText = "Buy grapes 99";
-        }
-        else if (/Pembelian Berhasil![^]*?Grapes[^]*?Kamu punya:/.test(text)) {
-            replyText = "Buy Garlic 99";
-        }
-        else if (/Pembelian Berhasil![^]*?Garlic[^]*?Kamu punya:/.test(text)) {
-            replyText = "Buy Blackbean 99";
-        }
-        else if (/Pembelian Berhasil![^]*?Black Bean[^]*?Kamu punya:/.test(text)) {
-            replyText = "Buy Peas 99";
-        }
-        else if (/Pembelian Berhasil![^]*?Peas[^]*?Kamu punya:/.test(text)) {
-            replyText = "Buy Figs 99";
-        }
-        else if (/Pembelian Berhasil![^]*?Figs[^]*?Kamu punya:/.test(text)) {
-            replyText = "Buy Radishes 99";
-        }
-        else if (/Pembelian Berhasil![^]*?Radishes[^]*?Kamu punya:/.test(text)) {
-            replyText = "Buy Apple 99";
-        }
-        else if (/Pembelian Berhasil![^]*?Apple[^]*?Kamu punya:/.test(text)) {
-            replyText = "Buy Beet 99";
-        }
-        else if (/Pembelian Berhasil![^]*?Beet[^]*?Kamu punya:/.test(text)) {
-            replyText = "Buy Pumpkins 99";
-        }
-        else if (/Pembelian Berhasil![^]*?Pumpkins[^]*?Kamu punya:/.test(text)) {
-            replyText = "Buy Hay 99";
-        }
-        else if (/Pembelian Berhasil![^]*?Hay[^]*?Kamu punya:/.test(text)) {
-            replyText = "Buy Wheat 99";
-        }
-
-        // 5. Stok Habis di Merchant (Pindah ke item berikutnya)
-        else if (/Stok[^]*?Wheat\b[^]*?sudah habis di merchant/.test(text)) {
-            replyText = "Buy Grapes 99";
-        }
-        else if (/Stok[^]*?Grapes\b[^]*?sudah habis di merchant/.test(text)) {
-            replyText = "Buy Garlic 99";
-        }
-        else if (/Stok[^]*?Garlic\b[^]*?sudah habis di merchant/.test(text)) {
-            replyText = "Buy Blackbean 99";
-        }
-        else if (/Stok[^]*?Black Bean\b[^]*?sudah habis di merchant/.test(text)) {
-            replyText = "Buy Peas 99";
-        }
-        else if (/Stok[^]*?Peas\b[^]*?sudah habis di merchant/.test(text)) {
-            replyText = "Buy Figs 99";
-        }
-        else if (/Stok[^]*?Figs\b[^]*?sudah habis di merchant/.test(text)) {
-            replyText = "Buy Radishes 99";
-        }
-        else if (/Stok[^]*?Radishes\b[^]*?sudah habis di merchant/.test(text)) {
-            replyText = "Buy Apple 99";
-        }
-        else if (/Stok[^]*?Apple\b[^]*?sudah habis di merchant/.test(text)) {
-            replyText = "Buy Beet 99";
-        }
-        else if (/Stok[^]*?Beet\b[^]*?sudah habis di merchant/.test(text)) {
-            replyText = "Buy Pumpkins 99";
-        }
-        else if (/Stok[^]*?Pumpkins\b[^]*?sudah habis di merchant/.test(text)) {
-            replyText = "Buy Hay 99";
-        }
-        else if (/Stok[^]*?Hay\b[^]*?sudah habis di merchant/.test(text)) {
-            replyText = "Buy Wheat 99";
-        }
-
-        // 6. Limit Benih Harian Tercapai
-        else if (/Limit\s+Benih\s+Harian\s+Tercapai![^]*?Figs/.test(text)) {
-            replyText = "Buy Radishes 99";
-        }
-        else if (/Limit\s+Benih\s+Harian\s+Tercapai![^]*?Radishes/.test(text)) {
-            replyText = "Buy Apple 99";
-        }
-        else if (/Limit\s+Benih\s+Harian\s+Tercapai![^]*?Apple/.test(text)) {
-            replyText = "Buy Beet 99";
-        }
-        else if (/Limit\s+Benih\s+Harian\s+Tercapai![^]*?Beet/.test(text)) {
-            replyText = "Buy Pumpkins 99";
-        }
-        else if (/Limit\s+Benih\s+Harian\s+Tercapai![^]*?Pumpkins/.test(text)) {
-            replyText = "Buy Hay 99";
-        }
-        else if (/Limit\s+Benih\s+Harian\s+Tercapai![^]*?Wheat/.test(text)) {
-            replyText = "Buy grapes 99";
-        }
-        else if (/Limit\s+Benih\s+Harian\s+Tercapai![^]*?Grapes/.test(text)) {
-            replyText = "Buy Garlic 99";
-        }
-        else if (/Limit\s+Benih\s+Harian\s+Tercapai![^]*?Garlic/.test(text)) {
-            replyText = "buy Blackbean 99";
-        }
-        else if (/Limit\s+Benih\s+Harian\s+Tercapai![^]*?Black Bean/.test(text)) {
-            replyText = "Buy Peas 99";
-        }
-        else if (/Limit\s+Benih\s+Harian\s+Tercapai![^]*?Peas/.test(text)) {
-            replyText = "Buy Figs 99";
-        }
-
-        // Eksekusi pengiriman balasan jika cocok
-        if (replyText) {
-            console.log(`[POLA COCOK] Mengirim balasan: "${replyText}"`);
-            setTimeout(async () => {
-                try {
-                    await client.sendMessage(message.chatId, {
-                        message: replyText,
-                        replyTo: message.id 
-                    });
-                    console.log('Berhasil terkirim!');
-                } catch (err) {
-                    console.log('Gagal mengirim:', err);
-                }
-            }, 1500);
-        }
-    }, new NewMessage({ incoming: true, outgoing: true }));
+// Handler saat tombol Stop ditekan
+function handleStop() {
+    if (currentState !== 'RUNNING' && currentState !== 'PROCESSING') return;
+    clearTimeout(processingTimeout);
+    incrementClick();
+    updateUIState('STOPPED');
+    addLogEntry('STOP', 'Menekan tombol Stop. Sistem telah dimatikan.', 'text-rose-400');
 }
 
-main();
+// Handler untuk pilihan aktivitas baru (Craft Satuan, Belanja, Mancing)
+function pilihAktivitas(namaMenu, iconClass, colorClass) {
+    incrementClick();
+    addLogEntry('MENU', `Memilih opsi aktivitas: ${namaMenu}`, colorClass);
+}
+
+// Menambahkan Catatan Aktivitas ke Log
+function addLogEntry(type, message, colorClass) {
+    if (emptyLogState) {
+        emptyLogState.style.display = 'none';
+    }
+
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    
+    const logItem = document.createElement('div');
+    logItem.className = 'flex items-start gap-3 p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 transform transition-all duration-300 translate-y-[-4px] opacity-0';
+    
+    let iconTag = '';
+    if (type === 'START') {
+        iconTag = `<span class="p-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20"><i class="fa-solid fa-hourglass-half text-[11px]"></i></span>`;
+    } else if (type === 'RUNNING') {
+        iconTag = `<span class="p-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="fa-solid fa-check text-[11px]"></i></span>`;
+    } else if (type === 'MENU') {
+        iconTag = `<span class="p-1 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><i class="fa-solid fa-bullseye text-[11px]"></i></span>`;
+    } else {
+        iconTag = `<span class="p-1 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20"><i class="fa-solid fa-ban text-[11px]"></i></span>`;
+    }
+
+    logItem.innerHTML = `
+        ${iconTag}
+        <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-center">
+                <span class="font-semibold ${colorClass}">${type}</span>
+                <span class="text-[10px] text-slate-500">${timeString}</span>
+            </div>
+            <p class="text-slate-300 mt-0.5 truncate">${message}</p>
+        </div>
+    `;
+
+    logContainer.insertBefore(logItem, logContainer.firstChild);
+
+    setTimeout(() => {
+        logItem.classList.remove('translate-y-[-4px]', 'opacity-0');
+    }, 10);
+
+    updateLogCount();
+}
+
+// Counter total klik
+function incrementClick() {
+    totalClickCount++;
+    statTotal.innerText = totalClickCount;
+}
+
+// Timer Uptime
+function startTimer() {
+    stopTimer();
+    uptimeTimer = setInterval(() => {
+        uptimeSeconds++;
+        const mins = Math.floor(uptimeSeconds / 60).toString().padStart(2, '0');
+        const secs = (uptimeSeconds % 60).toString().padStart(2, '0');
+        statUptime.innerText = `${mins}:${secs}`;
+    }, 1000);
+}
+
+function stopTimer() {
+    if (uptimeTimer) {
+        clearInterval(uptimeTimer);
+        uptimeTimer = null;
+    }
+}
+
+// Membersihkan Riwayat Log
+function clearLogs() {
+    logContainer.innerHTML = '';
+    const emptyState = document.createElement('div');
+    emptyState.id = 'emptyLogState';
+    emptyState.className = 'text-center py-12 text-slate-500';
+    emptyState.innerHTML = `
+        <i class="fa-solid fa-clock-rotate-left text-2xl mb-2 block opacity-40"></i>
+        Belum ada riwayat aktivitas.
+    `;
+    logContainer.appendChild(emptyState);
+    updateLogCount();
+}
+
+// Memperbarui jumlah total log yang ada
+function updateLogCount() {
+    const items = logContainer.querySelectorAll('.flex.items-start');
+    logCountText.innerText = `${items.length} Entri`;
+}
+
+// Inisialisasi awal
+window.onload = function() {
+    updateUIState('STOPPED');
+};
