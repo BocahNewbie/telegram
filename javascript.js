@@ -1,5 +1,5 @@
 // ==========================================
-// SISTEM ACAK NAMA - LOGIKA UTAMA
+// SISTEM ACAK NAMA - LOGIKA UTAMA (FIXED)
 // ==========================================
 
 let daftarPeserta = [];
@@ -23,7 +23,8 @@ function TerapkanKonfigurasi() {
             ${CONFIG.namaAplikasi} BY ${CONFIG.pemilikBrand}
         `;
         document.getElementById('headerSub').innerText = CONFIG.subJudul;
-        document.getElementById('btnStartText').innerText = `MULAI UNDIAN (${CONFIG.durasiRollDetik / 1000} DETIK)`;
+        const durasiDetik = CONFIG.durasiRollDetik / 1000;
+        document.getElementById('btnStartText').innerText = `MULAI UNDIAN)`;
     }
 }
 
@@ -65,12 +66,12 @@ function hapusPeserta(id) {
     renderUI();
 }
 
-// MULAI ACAK (Durasi membaca dari CONFIG)
+// MULAI ACAK
 function mulaiAcak() {
     const pesertaAktif = daftarPeserta.filter(p => p.status === 'aktif');
     
     if (pesertaAktif.length === 0) {
-        alert('Tidak ada peserta aktif untuk diundi!');
+        alert('Tidak ada peserta aktif yang tersisa untuk diundi!');
         return;
     }
     
@@ -90,12 +91,15 @@ function mulaiAcak() {
     statusCard.className = "relative overflow-hidden rounded-xl border p-5 transition-all duration-300 bg-emerald-950/20 border-emerald-500/50 shadow-lg shadow-emerald-950/30";
     statusDesc.innerText = `Mengacak nama secara adil`;
 
-    // Interval Animasi Acak (Pure Random)
+    // Interval Animasi Acak (Mengambil dari daftar peserta aktif secara real-time)
     intervalId = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * pesertaAktif.length);
-        statusText.innerText = pesertaAktif[randomIndex].nama;
-        statusText.classList.add('scale-105', 'text-emerald-400');
-        setTimeout(() => statusText.classList.remove('scale-105', 'text-emerald-400'), 50);
+        const currentAktif = daftarPeserta.filter(p => p.status === 'aktif');
+        if (currentAktif.length > 0) {
+            const randomIndex = Math.floor(Math.random() * currentAktif.length);
+            statusText.innerText = currentAktif[randomIndex].nama;
+            statusText.classList.add('scale-105', 'text-emerald-400');
+            setTimeout(() => statusText.classList.remove('scale-105', 'text-emerald-400'), 50);
+        }
     }, 80);
 
     // Stop Otomatis sesuai Durasi Config
@@ -105,24 +109,25 @@ function mulaiAcak() {
     }, waktuDurasi);
 }
 
-// Proses Penentuan Pemenang Final (PERBAIKAN BUG PEMBLOKIRAN)
+// Proses Penentuan Pemenang Final (100% AMAN DARI BUG BLOKIR MASSAL)
 function eksekusiPemenang() {
     clearInterval(intervalId);
     sedangAcak = false;
     
+    // Ambil ulang peserta yang benar-benar berstatus 'aktif' saat ini
     const pesertaAktif = daftarPeserta.filter(p => p.status === 'aktif');
     if (pesertaAktif.length === 0) return;
 
-    // PURE RANDOM SELECTION
+    // Pilih satu secara murni acak (pure random) dari peserta aktif
     const finalIndex = Math.floor(Math.random() * pesertaAktif.length);
     const pemenangTerpilih = pesertaAktif[finalIndex];
     
-    // PERBAIKAN BUG: Hanya ubah status peserta yang ID-nya PERSIS SAMA dengan pemenang terpilih
+    // UPDATE STATUS AMAN: Hanya ubah status peserta yang ID-nya 100% cocok dengan pemenangTerpilih
     daftarPeserta = daftarPeserta.map(p => {
         if (p.id === pemenangTerpilih.id) {
-            return { ...p, status: 'menang' }; // Hanya pemenang yang diubah statusnya
+            return { ...p, status: 'menang' }; // Hanya pemenang tunggal
         }
-        return p; // Peserta lain dibiarkan tetap 'aktif' tanpa tersentuh
+        return p; // Peserta lain dipastikan tetap 'aktif' tanpa tersentuh
     });
 
     // Masukkan ke riwayat pemenang (Tanpa Jam)
@@ -240,13 +245,13 @@ function tutupModal() {
 
 // LocalStorage Persistence
 function simpanKeLocalStorage() {
-    localStorage.setItem('nonfood_peserta', JSON.stringify(daftarPeserta));
-    localStorage.setItem('nonfood_riwayat', JSON.stringify(riwayatPemenang));
+    localStorage.setItem('roll_peserta', JSON.stringify(daftarPeserta));
+    localStorage.setItem('roll_riwayat', JSON.stringify(riwayatPemenang));
 }
 
 function muatDariLocalStorage() {
-    const savedPeserta = localStorage.getItem('nonfood_peserta');
-    const savedRiwayat = localStorage.getItem('nonfood_riwayat');
+    const savedPeserta = localStorage.getItem('roll_peserta');
+    const savedRiwayat = localStorage.getItem('roll_riwayat');
     
     if (savedPeserta) daftarPeserta = JSON.parse(savedPeserta);
     if (savedRiwayat) riwayatPemenang = JSON.parse(savedRiwayat);
