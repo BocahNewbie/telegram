@@ -1,5 +1,5 @@
 // ==========================================
-// SISTEM ACAK NAMA - NON FOOD CIAMIS
+// SISTEM ACAK NAMA - LOGIKA UTAMA
 // ==========================================
 
 let daftarPeserta = [];
@@ -10,9 +10,22 @@ let sedangAcak = false;
 
 // Load data saat halaman dibuka
 window.onload = function() {
+    TerapkanKonfigurasi();
     muatDariLocalStorage();
     renderUI();
 };
+
+// Terapkan Config Teks ke HTML
+function TerapkanKonfigurasi() {
+    if (typeof CONFIG !== 'undefined') {
+        document.getElementById('headerTitle').innerHTML = `
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
+            ${CONFIG.namaAplikasi} BY ${CONFIG.pemilikBrand}
+        `;
+        document.getElementById('headerSub').innerText = CONFIG.subJudul;
+        document.getElementById('btnStartText').innerText = `MULAI UNDIAN (${CONFIG.durasiRollDetik / 1000} DETIK)`;
+    }
+}
 
 // Tambah Peserta Satuan
 function tambahPeserta() {
@@ -52,7 +65,7 @@ function hapusPeserta(id) {
     renderUI();
 }
 
-// MULAI ACAK (Durasi 20 Detik & Pure Random Tanpa Tombol Stop)
+// MULAI ACAK (Durasi membaca dari CONFIG)
 function mulaiAcak() {
     const pesertaAktif = daftarPeserta.filter(p => p.status === 'aktif');
     
@@ -65,20 +78,19 @@ function mulaiAcak() {
     sedangAcak = true;
     
     const btnStart = document.getElementById('btnStart');
-    
-    // Nonaktifkan tombol Start selama proses mengacak
     btnStart.disabled = true;
     btnStart.classList.add('opacity-40', 'cursor-not-allowed');
     
-    // Ubah Tampilan Status Card menjadi Animasi Mengacak
     const statusText = document.getElementById('statusText');
     const statusDesc = document.getElementById('statusDesc');
     const statusCard = document.getElementById('statusCard');
     
+    const durasiDetik = (CONFIG ? CONFIG.durasiRollDetik : 20000) / 1000;
+    
     statusCard.className = "relative overflow-hidden rounded-xl border p-5 transition-all duration-300 bg-emerald-950/20 border-emerald-500/50 shadow-lg shadow-emerald-950/30";
-    statusDesc.innerText = "Mengacak nama secara adil (Berhenti otomatis dalam 20 detik)...";
+    statusDesc.innerText = `Mengacak nama secara adil (Berhenti otomatis dalam ${durasiDetik} detik)...`;
 
-    // Interval Animasi Teks Berjalan (Pure Random Math.random)
+    // Interval Animasi Acak (Pure Random)
     intervalId = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * pesertaAktif.length);
         statusText.innerText = pesertaAktif[randomIndex].nama;
@@ -86,13 +98,14 @@ function mulaiAcak() {
         setTimeout(() => statusText.classList.remove('scale-105', 'text-emerald-400'), 50);
     }, 80);
 
-    // Otomatis Berhenti Setelah 20 Detik (20000 ms)
+    // Stop Otomatis sesuai Durasi Config
+    const waktuDurasi = CONFIG ? CONFIG.durasiRollDetik : 20000;
     autoStopTimeout = setTimeout(() => {
         eksekusiPemenang();
-    }, 20000);
+    }, waktuDurasi);
 }
 
-// Proses Penentuan Pemenang Final (Memperbaiki Bug Status Peserta Lain)
+// Proses Penentuan Pemenang Final (PERBAIKAN BUG PEMBLOKIRAN)
 function eksekusiPemenang() {
     clearInterval(intervalId);
     sedangAcak = false;
@@ -100,16 +113,16 @@ function eksekusiPemenang() {
     const pesertaAktif = daftarPeserta.filter(p => p.status === 'aktif');
     if (pesertaAktif.length === 0) return;
 
-    // PURE RANDOM SELECTION (Murni acak tanpa rekayasa/chance)
+    // PURE RANDOM SELECTION
     const finalIndex = Math.floor(Math.random() * pesertaAktif.length);
     const pemenangTerpilih = pesertaAktif[finalIndex];
     
-    // Perbaikan Bug: Hanya ubah status peserta yang benar-benar terpilih menjadi 'menang'
+    // PERBAIKAN BUG: Hanya ubah status peserta yang ID-nya PERSIS SAMA dengan pemenang terpilih
     daftarPeserta = daftarPeserta.map(p => {
         if (p.id === pemenangTerpilih.id) {
-            return { ...p, status: 'menang' };
+            return { ...p, status: 'menang' }; // Hanya pemenang yang diubah statusnya
         }
-        return p; // Peserta lain dibiarkan tetap seperti semula
+        return p; // Peserta lain dibiarkan tetap 'aktif' tanpa tersentuh
     });
 
     // Masukkan ke riwayat pemenang (Tanpa Jam)
@@ -130,7 +143,7 @@ function eksekusiPemenang() {
     statusDesc.innerText = "Selamat! Peserta berhasil terpilih.";
     statusCard.className = "relative overflow-hidden rounded-xl border p-5 transition-all duration-300 bg-slate-950/80 border-emerald-500/80 shadow-xl shadow-emerald-950/40";
 
-    // Kembalikan Tombol Start seperti semula
+    // Aktifkan kembali tombol Start
     const btnStart = document.getElementById('btnStart');
     btnStart.disabled = false;
     btnStart.classList.remove('opacity-40', 'cursor-not-allowed');
