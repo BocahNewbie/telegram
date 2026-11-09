@@ -12,14 +12,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- File Konfigurasi -->
+    <script src="config.js"></script>
     <!-- CSS Eksternal -->
     <link rel="stylesheet" href="style.css">
     <script>
         tailwind.config = {
             theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] }
-                }
+                extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } }
             }
         }
     </script>
@@ -32,11 +32,11 @@
         <!-- Header Minimalis Profesional -->
         <header class="mb-6 sm:mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
             <div class="text-center sm:text-left">
-                <h1 class="text-2xl font-bold tracking-tight text-white flex items-center justify-center sm:justify-start gap-2.5">
+                <h1 id="headerTitle" class="text-2xl font-bold tracking-tight text-white flex items-center justify-center sm:justify-start gap-2.5">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
-                    ROLL THE NAME by BOCAH NEWBIE
+                    ROLL THE NAME
                 </h1>
-                <p class="text-xs text-slate-400 tracking-wide mt-0.5">Sistem Pengundian Adil & Transparan</p>
+                <p id="headerSub" class="text-xs text-slate-400 tracking-wide mt-0.5">Sistem Pengundian Adil & Transparan</p>
             </div>
             <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-full border border-slate-800 text-xs text-slate-400 shadow-sm">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -78,12 +78,12 @@
                 </div>
 
                 <!-- Tombol Kontrol START -->
-<div>
-    <button id="btnStart" onclick="mulaiAcak()" class="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl font-semibold text-slate-950 bg-emerald-400 hover:bg-emerald-300 active:scale-[0.98] transition-all text-xs tracking-wide shadow-lg shadow-emerald-950/20">
-        <i class="fa-solid fa-play text-[10px]"></i>
-        <span>MULAI UNDIAN</span>
-    </button>
-</div>
+                <div>
+                    <button id="btnStart" onclick="mulaiAcak()" class="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl font-semibold text-slate-950 bg-emerald-400 hover:bg-emerald-300 active:scale-[0.98] transition-all text-xs tracking-wide shadow-lg shadow-emerald-950/20">
+                        <i class="fa-solid fa-play text-[10px]"></i>
+                        <span id="btnStartText">MULAI UNDIAN</span>
+                    </button>
+                </div>
 
                 <!-- Statistik Ringkas -->
                 <div class="grid grid-cols-2 gap-3 pt-4 border-t border-slate-800/80 text-center">
@@ -139,7 +139,7 @@
         </main>
 
         <!-- Footer -->
-        <footer class="mt-8 pt-4 border-t border-slate-900 text-center text-xs text-slate-600 flex flex-col sm:flex-row justify-between items-center gap-2">
+        <footer id="footerText" class="mt-8 pt-4 border-t border-slate-900 text-center text-xs text-slate-600 flex flex-col sm:flex-row justify-between items-center gap-2">
             <div>&copy; 2026 Bocah Ciamis. All rights reserved.</div>
             <div class="flex items-center gap-1.5 text-slate-500">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> System Online
