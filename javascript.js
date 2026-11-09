@@ -52,7 +52,7 @@ function hapusPeserta(id) {
     renderUI();
 }
 
-// MULAI ACAK (Durasi 50 Detik & Pure Random)
+// MULAI ACAK (Durasi 20 Detik & Pure Random Tanpa Tombol Stop)
 function mulaiAcak() {
     const pesertaAktif = daftarPeserta.filter(p => p.status === 'aktif');
     
@@ -65,13 +65,10 @@ function mulaiAcak() {
     sedangAcak = true;
     
     const btnStart = document.getElementById('btnStart');
-    const btnStop = document.getElementById('btnStop');
     
-    // Ubah status tombol
+    // Nonaktifkan tombol Start selama proses mengacak
     btnStart.disabled = true;
     btnStart.classList.add('opacity-40', 'cursor-not-allowed');
-    btnStop.disabled = false;
-    btnStop.classList.remove('opacity-40', 'cursor-not-allowed');
     
     // Ubah Tampilan Status Card menjadi Animasi Mengacak
     const statusText = document.getElementById('statusText');
@@ -79,7 +76,7 @@ function mulaiAcak() {
     const statusCard = document.getElementById('statusCard');
     
     statusCard.className = "relative overflow-hidden rounded-xl border p-5 transition-all duration-300 bg-emerald-950/20 border-emerald-500/50 shadow-lg shadow-emerald-950/30";
-    statusDesc.innerText = "Mengacak nama secara adil (Berhenti otomatis dalam 50 detik)...";
+    statusDesc.innerText = "Mengacak nama secara adil (Berhenti otomatis dalam 20 detik)...";
 
     // Interval Animasi Teks Berjalan (Pure Random Math.random)
     intervalId = setInterval(() => {
@@ -89,26 +86,13 @@ function mulaiAcak() {
         setTimeout(() => statusText.classList.remove('scale-105', 'text-emerald-400'), 50);
     }, 80);
 
-    // Otomatis Berhenti Setelah 50 Detik (50000 ms)
+    // Otomatis Berhenti Setelah 20 Detik (20000 ms)
     autoStopTimeout = setTimeout(() => {
-        hentiAcakOtomatis();
-    }, 50000);
+        eksekusiPemenang();
+    }, 20000);
 }
 
-// Berhenti Manual lewat Tombol STOP
-function hentiAcak() {
-    if (!sedangAcak) return;
-    clearTimeout(autoStopTimeout);
-    eksekusiPemenang();
-}
-
-// Berhenti Otomatis setelah 50 Detik
-function hentiAcakOtomatis() {
-    if (!sedangAcak) return;
-    eksekusiPemenang();
-}
-
-// Proses Penentuan Pemenang Final
+// Proses Penentuan Pemenang Final (Memperbaiki Bug Status Peserta Lain)
 function eksekusiPemenang() {
     clearInterval(intervalId);
     sedangAcak = false;
@@ -120,15 +104,15 @@ function eksekusiPemenang() {
     const finalIndex = Math.floor(Math.random() * pesertaAktif.length);
     const pemenangTerpilih = pesertaAktif[finalIndex];
     
-    // Ubah status peserta menjadi 'menang' (blokir otomatis dari undian berikutnya)
+    // Perbaikan Bug: Hanya ubah status peserta yang benar-benar terpilih menjadi 'menang'
     daftarPeserta = daftarPeserta.map(p => {
         if (p.id === pemenangTerpilih.id) {
             return { ...p, status: 'menang' };
         }
-        return p;
+        return p; // Peserta lain dibiarkan tetap seperti semula
     });
 
-    // Masukkan ke riwayat pemenang (TANPA JAM)
+    // Masukkan ke riwayat pemenang (Tanpa Jam)
     riwayatPemenang.unshift({
         id: Date.now(),
         nama: pemenangTerpilih.nama
@@ -146,14 +130,10 @@ function eksekusiPemenang() {
     statusDesc.innerText = "Selamat! Peserta berhasil terpilih.";
     statusCard.className = "relative overflow-hidden rounded-xl border p-5 transition-all duration-300 bg-slate-950/80 border-emerald-500/80 shadow-xl shadow-emerald-950/40";
 
-    // Kembalikan Tombol ke Semula
+    // Kembalikan Tombol Start seperti semula
     const btnStart = document.getElementById('btnStart');
-    const btnStop = document.getElementById('btnStop');
-    
     btnStart.disabled = false;
     btnStart.classList.remove('opacity-40', 'cursor-not-allowed');
-    btnStop.disabled = true;
-    btnStop.classList.add('opacity-40', 'cursor-not-allowed');
 
     // Tampilkan Modal Pemenang
     tampilkanModal(pemenangTerpilih.nama);
