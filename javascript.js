@@ -88,7 +88,7 @@ function mulaiAcak() {
     const durasiDetik = (CONFIG ? CONFIG.durasiRollDetik : 20000) / 1000;
     
     statusCard.className = "relative overflow-hidden rounded-xl border p-5 transition-all duration-300 bg-emerald-950/20 border-emerald-500/50 shadow-lg shadow-emerald-950/30";
-    statusDesc.innerText = `Mengacak nama secara adil (Berhenti otomatis dalam ${durasiDetik} detik)...`;
+    statusDesc.innerText = `Mengacak nama secara adil`;
 
     // Interval Animasi Acak (Pure Random)
     intervalId = setInterval(() => {
